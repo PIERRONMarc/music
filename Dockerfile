@@ -33,8 +33,14 @@ RUN set -eux; \
 		intl \
 		zip \
 	; \
+    apk add --no-cache \
+    	curl-dev \
+     	pkgconf \
+    	openssl-dev \
+    ; \
 	pecl install \
 		apcu-${APCU_VERSION} \
+    	mongodb \
 	; \
 	pecl clear-cache; \
 	docker-php-ext-enable \
@@ -57,8 +63,8 @@ RUN chmod +x /usr/local/bin/docker-healthcheck
 
 HEALTHCHECK --interval=10s --timeout=3s --retries=3 CMD ["docker-healthcheck"]
 
-RUN ln -s $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini
-COPY docker/php/conf.d/symfony.prod.ini $PHP_INI_DIR/conf.d/symfony.ini
+RUN ln -s $PHP_INI_DIR/php.ini-development $PHP_INI_DIR/php.ini
+COPY docker/php/conf.d/symfony.dev.ini $PHP_INI_DIR/conf.d/symfony.ini
 
 COPY docker/php/php-fpm.d/zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 
@@ -101,7 +107,7 @@ RUN set -eux; \
 	mkdir -p var/cache var/log; \
 	composer install --prefer-dist --no-dev --no-progress --no-scripts --no-interaction; \
 	composer dump-autoload --classmap-authoritative --no-dev; \
-	composer symfony:dump-env prod; \
+	composer symfony:dump-env dev; \
 	composer run-script --no-dev post-install-cmd; \
 	chmod +x bin/console; sync
 VOLUME /srv/app/var

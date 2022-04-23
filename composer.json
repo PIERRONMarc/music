@@ -9,18 +9,25 @@
         "php": ">=8.1.4",
         "ext-ctype": "*",
         "ext-iconv": "*",
+        "doctrine/mongodb-odm-bundle": "^4.4",
+        "lcobucci/jwt": "^4.1",
+        "ramsey/uuid": "^4.3",
         "symfony/console": "6.0.*",
         "symfony/dotenv": "6.0.*",
         "symfony/flex": "^2",
         "symfony/framework-bundle": "6.0.*",
+        "symfony/options-resolver": "6.0.*",
+        "symfony/property-access": "6.0.*",
         "symfony/runtime": "6.0.*",
+        "symfony/serializer": "6.0.*",
         "symfony/yaml": "6.0.*"
     },
     "config": {
         "allow-plugins": {
             "composer/package-versions-deprecated": true,
             "symfony/flex": true,
-            "symfony/runtime": true
+            "symfony/runtime": true,
+            "phpro/grumphp": true
         },
         "optimize-autoloader": true,
         "preferred-install": {
@@ -69,11 +76,16 @@
         }
     },
     "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.8",
         "phpro/grumphp": "^1.10",
         "phpstan/phpstan": "^1.5",
         "phpstan/phpstan-doctrine": "^1.3",
         "phpstan/phpstan-phpunit": "^1.1",
         "phpstan/phpstan-symfony": "^1.1",
-        "sebastian/phpcpd": "^6.0"
+        "phpunit/phpunit": "^9.5",
+        "sebastian/phpcpd": "^6.0",
+        "symfony/browser-kit": "6.0.*",
+        "symfony/css-selector": "6.0.*",
+        "symfony/phpunit-bridge": "^6.0"
     }
 }
