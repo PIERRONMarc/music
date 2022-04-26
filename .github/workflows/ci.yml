@@ -6,7 +6,7 @@ on:
 
 jobs:
     build:
-        name: Docker build
+        name: Docker build and run tests
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
@@ -29,3 +29,5 @@ jobs:
               run: curl http://localhost
             - name: Check HTTPS reachability
               run: curl -k https://localhost
+            - name: Run tests
+              run: docker-compose exec -T php bin/phpunit
