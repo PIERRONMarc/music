@@ -14,11 +14,11 @@ class TokenFactory
 {
     private Configuration $config;
 
-    public function __construct()
+    public function __construct(string $jwtSecretKeyPath)
     {
         $this->config = Configuration::forSymmetricSigner(
             new Sha256(),
-            InMemory::file($_ENV['JWT_SECRET_KEY'])
+            InMemory::file($jwtSecretKeyPath)
         );
     }
 
