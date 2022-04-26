@@ -24,7 +24,10 @@ services:
       MERCURE_URL: ${CADDY_MERCURE_URL:-http://caddy/.well-known/mercure}
       MERCURE_PUBLIC_URL: https://${SERVER_NAME:-localhost}/.well-known/mercure
       MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET:-!ChangeMe!}
-
+      MONGODB_URL: mongodb://${MONGODB_USER:-root}:${MONGODB_PASSWORD:-root}@mongo:27017
+      MONGODB_DB: ${MONGODB_DB:-appDB}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-/srv/app/config/jwt/private.pem}
+      
   caddy:
     build:
       context: .
@@ -53,6 +56,17 @@ services:
       - target: 443
         published: ${HTTP3_PORT:-443}
         protocol: udp
+        
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - target: 27017
+        published: 27017
+        protocol: tcp
 
 # Mercure is installed as a Caddy module, prevent the Flex recipe from installing another service
 ###> symfony/mercure-bundle ###
