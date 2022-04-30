@@ -9,10 +9,6 @@ jobs:
         environment: Testing
         env: 
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-          APP_SECRET: ${{ secrets.APP_SECRET }}
-          CADDY_MERCURE_JWT_SECRET: ${{ secrets.CADDY_MERCURE_JWT_SECRET }}
-          MONGODB_URL: ${{ secrets.MONGODB_URL }}
-          MONGODB_DB: ${{ secrets.MONGODB_DB }}
         name: Docker build and run tests
         runs-on: ubuntu-latest
         steps:
@@ -21,7 +17,7 @@ jobs:
             - name: Pull images
               run: docker-compose pull
             - name: Start services
-              run: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
+              run: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
             - name: Wait for services
               run: |
                   while status="$(docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" "$(docker-compose ps -q php)")"; do

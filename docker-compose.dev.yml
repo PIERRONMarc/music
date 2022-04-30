@@ -9,9 +9,12 @@ services:
       - ./docker/php/conf.d/symfony.dev.ini:/usr/local/etc/php/conf.d/symfony.ini
       # If you develop on Mac you can remove the var/ directory from the bind-mount
       # for better performance by enabling the next line 
-       - /srv/app/var
+#       - /srv/app/var
     environment:
       APP_ENV: dev
+      MONGODB_URL: mongodb://${MONGODB_USER:-root}:${MONGODB_PASSWORD:-root}@mongo:27017
+      MONGODB_DB: ${MONGODB_DB:-appDB}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-/srv/app/config/jwt/private.pem}
 
   caddy:
     volumes:
