@@ -9,7 +9,7 @@ trait DatabaseTrait
 {
     protected function getDocumentManager(): DocumentManager
     {
-        return $this->getContainer()->get('doctrine_mongodb.odm.document_manager');
+        return static::getContainer()->get('doctrine_mongodb.odm.document_manager');
     }
 
     /**

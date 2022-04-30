@@ -18,15 +18,10 @@ services:
       retries: 3
       start_period: 30s
     environment:
-      # Run "composer require symfony/orm-pack" to install and configure Doctrine ORM
-      DATABASE_URL: postgresql://${POSTGRES_USER:-symfony}:${POSTGRES_PASSWORD:-ChangeMe}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-13}
       # Run "composer require symfony/mercure-bundle" to install and configure the Mercure integration
       MERCURE_URL: ${CADDY_MERCURE_URL:-http://caddy/.well-known/mercure}
       MERCURE_PUBLIC_URL: https://${SERVER_NAME:-localhost}/.well-known/mercure
       MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET:-!ChangeMe!}
-      MONGODB_URL: mongodb://${MONGODB_USER:-root}:${MONGODB_PASSWORD:-root}@mongo:27017
-      MONGODB_DB: ${MONGODB_DB:-appDB}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-/srv/app/config/jwt/private.pem}
       
   caddy:
     build:
