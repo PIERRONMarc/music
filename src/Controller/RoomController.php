@@ -9,12 +9,13 @@ use App\Service\RandomNameGenerator\GuestName\RandomGuestNameGenerator;
 use App\Service\RandomNameGenerator\RoomName\RandomRoomNameGenerator;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class RoomController extends AbstractController
 {
-    #[Route('/room', name: 'app_room', methods: ['POST'])]
+    #[Route('/room', name: 'create_room', methods: ['POST'])]
     public function index(
         DocumentManager $manager,
         RandomRoomNameGenerator $randomRoomNameGenerator,
@@ -31,5 +32,15 @@ class RoomController extends AbstractController
         $manager->flush();
 
         return $this->json($room);
+    }
+
+    #[Route('/room', name: 'get_all_room', methods: ['GET'])]
+    public function getAllRooms(DocumentManager $dm, Request $request): Response
+    {
+        $page = 0 === $request->query->getInt('page', 1) ? 1 : $request->query->getInt('page', 1);
+        $offset = ($page - 1) * 30;
+        $rooms = $dm->getRepository(Room::class)->findBy([], [], 30, $offset);
+
+        return $this->json($rooms);
     }
 }
