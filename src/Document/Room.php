@@ -6,7 +6,6 @@ use App\Repository\RoomRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
-use Ramsey\Uuid\Uuid;
 
 /**
  * @MongoDB\Document(collection="rooms", repositoryClass=RoomRepository::class)
@@ -34,12 +33,12 @@ class Room
     private string $token;
 
     /**
-     * @MongoDB\EmbedMany(targetDocument="Song::class")
+     * @MongoDB\EmbedMany(targetDocument=Song::class)
      */
     private Collection $songs;
 
     /**
-     * @MongoDB\EmbedMany(targetDocument="Song::class")
+     * @MongoDB\EmbedMany(targetDocument=Guest::class)
      */
     private Collection $guests;
 
@@ -52,7 +51,7 @@ class Room
     public function getId(): ?string
     {
         if ($this->id) {
-            return Uuid::fromString($this->id);
+            return $this->id;
         }
 
         return null;
