@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Document\Guest;
 use App\Document\Room;
+use App\DTO\HttpExceptionDTO;
+use App\DTO\JoinRoomDTO;
 use App\Service\Jwt\TokenFactory;
 use App\Service\RandomNameGenerator\GuestName\RandomGuestNameGenerator;
 use App\Service\RandomNameGenerator\RoomName\RandomRoomNameGenerator;
@@ -42,5 +44,28 @@ class RoomController extends AbstractController
         $rooms = $dm->getRepository(Room::class)->findBy([], [], 30, $offset);
 
         return $this->json($rooms);
+    }
+
+    #[Route('/join/{id}', name: 'join_room', methods: ['GET'])]
+    public function joinRoom(
+        string $id,
+        DocumentManager $dm,
+        RandomGuestNameGenerator $randomGuestNameGenerator
+    ): Response {
+        $guest = (new Guest())->setUsername($randomGuestNameGenerator->getName());
+        $room = $dm->getRepository(Room::class)->findOneBy(['id' => str_replace('-', '', $id)]);
+
+        if (!$room) {
+            return $this->json((new HttpExceptionDTO())
+                ->setDescription('The room '.$id.' does not exist.'), 404);
+        }
+
+        $room->addGuest($guest);
+        $dm->flush();
+
+        return $this->json((new JoinRoomDTO())
+            ->setGuest($guest)
+            ->setRoom($room)
+        );
     }
 }
