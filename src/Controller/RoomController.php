@@ -4,15 +4,22 @@ namespace App\Controller;
 
 use App\Document\Guest;
 use App\Document\Room;
-use App\DTO\HttpExceptionDTO;
+use App\Document\Song;
 use App\DTO\JoinRoomDTO;
+use App\Exception\FormHttpException;
+use App\Form\SongType;
 use App\Service\Jwt\TokenFactory;
 use App\Service\RandomNameGenerator\GuestName\RandomGuestNameGenerator;
 use App\Service\RandomNameGenerator\RoomName\RandomRoomNameGenerator;
 use Doctrine\ODM\MongoDB\DocumentManager;
+use Lcobucci\JWT\Encoding\JoseEncoder;
+use Lcobucci\JWT\Token\Parser;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
 class RoomController extends AbstractController
@@ -56,8 +63,7 @@ class RoomController extends AbstractController
         $room = $dm->getRepository(Room::class)->findOneBy(['id' => str_replace('-', '', $id)]);
 
         if (!$room) {
-            return $this->json((new HttpExceptionDTO())
-                ->setDescription('The room '.$id.' does not exist.'), 404);
+            throw new NotFoundHttpException('The room '.$id.' does not exist.');
         }
 
         $room->addGuest($guest);
@@ -67,5 +73,48 @@ class RoomController extends AbstractController
             ->setGuest($guest)
             ->setRoom($room)
         );
+    }
+
+    #[Route('room/{id}/song', name: 'add_song', methods: ['POST'])]
+    public function addSong(string $id, DocumentManager $dm, Request $request, TokenFactory $tokenFactory): Response
+    {
+        $jwt = $request->headers->get('Authorization');
+
+        if (!$jwt) {
+            throw new UnauthorizedHttpException('Bearer', 'JWT Token not found');
+        }
+
+        if (!str_starts_with($jwt, 'Bearer ') && !str_starts_with($jwt, 'bearer ')) {
+            throw new UnauthorizedHttpException('Bearer', "The Authorization scheme named: 'Bearer' was not found");
+        }
+
+        $jwt = explode(' ', $jwt)[1];
+
+        if (!$tokenFactory->validateToken((new Parser(new JoseEncoder()))->parse($jwt))) {
+            throw new UnauthorizedHttpException('Bearer', 'Invalid JWT Token');
+        }
+
+        $form = $this->createForm(SongType::class);
+        $form->submit($request->request->all());
+
+        if (!$form->isValid()) {
+            throw new FormHttpException($form);
+        }
+
+        /** @var Room|null $room */
+        $room = $dm->getRepository(Room::class)->findOneBy(['id' => str_replace('-', '', $id)]);
+        if (!$room) {
+            throw new NotFoundHttpException('The room does not exist');
+        }
+
+        if ($jwt != $room->getToken()) {
+            throw new AccessDeniedHttpException('JWT Token does not belong to this room');
+        }
+        $song = (new Song())->setUrl($request->request->get('url'));
+
+        $room->addSong($song);
+        $dm->flush();
+
+        return $this->json($song);
     }
 }
