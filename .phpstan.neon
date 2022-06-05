@@ -20,3 +20,5 @@ parameters:
         containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
     scanDirectories:
         - var/cache/dev/Symfony/Config
+    ignoreErrors:
+        - '#Method App\\Tests\\[a-zA-Z0-9\\_]+::provide[a-zA-Z0-9\\_]+\(\) is unused.#'

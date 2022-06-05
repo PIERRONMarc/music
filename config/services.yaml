@@ -28,3 +28,7 @@ services:
     App\Service\Jwt\TokenFactory:
         arguments:
             - '%env(resolve:JWT_SECRET_KEY)%'
+                
+    App\Factory\NormalizerFactory:
+        arguments: [ !tagged serializer.normalizer ]
+        public: true
