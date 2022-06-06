@@ -3,6 +3,7 @@
 namespace App\Tests\Service\Jwt;
 
 use App\Service\Jwt\TokenFactory;
+use Lcobucci\JWT\Token;
 use Lcobucci\JWT\Token\Plain;
 use PHPUnit\Framework\TestCase;
 
@@ -36,5 +37,12 @@ class TokenFactoryTest extends TestCase
 
         $this->assertTrue($tokenFactory->validateToken($validToken));
         $this->assertFalse($tokenFactory->validateToken($invalidToken));
+    }
+
+    public function testParsingToken(): void
+    {
+        $tokenFactory = new TokenFactory(self::PRIVATE_KEY);
+        $token = $tokenFactory->createToken()->toString();
+        $this->assertInstanceOf(Token::class, $tokenFactory->parseToken($token));
     }
 }

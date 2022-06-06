@@ -12,6 +12,7 @@ use App\Service\Jwt\TokenFactory;
 use App\Service\RandomNameGenerator\GuestName\RandomGuestNameGenerator;
 use App\Service\RandomNameGenerator\RoomName\RandomRoomNameGenerator;
 use Doctrine\ODM\MongoDB\DocumentManager;
+use Lcobucci\JWT\Token\Plain;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,16 +30,27 @@ class RoomController extends AbstractController
         RandomGuestNameGenerator $randomGuestNameGenerator,
         TokenFactory $tokenFactory
     ): Response {
-        $host = (new Guest())->setUsername($randomGuestNameGenerator->getUsername());
+        $username = $randomGuestNameGenerator->getUsername();
+        $host = (new Guest())
+            ->setUsername($username)
+            ->setRole(Guest::ROLE_ADMIN)
+        ;
         $room = (new Room())
             ->setHost($host)
             ->addGuest($host)
             ->setName($randomRoomNameGenerator->getName())
         ;
-        $room->setToken($tokenFactory->createToken(['claims' => ['name' => $room->getName()]])->toString());
 
         $manager->persist($room);
         $manager->flush();
+
+        $host->setToken($tokenFactory->createToken([
+            'claims' => [
+                'username' => $username,
+                'roomId' => $room->getId(),
+            ],
+        ])->toString());
+        $room->setHost($host);
 
         return $this->json($room);
     }
@@ -57,7 +69,8 @@ class RoomController extends AbstractController
     public function joinRoom(
         string $id,
         DocumentManager $dm,
-        RandomGuestNameGenerator $randomGuestNameGenerator
+        RandomGuestNameGenerator $randomGuestNameGenerator,
+        TokenFactory $tokenFactory
     ): Response {
         $room = $dm->getRepository(Room::class)->findOneBy(['id' => str_replace('-', '', $id)]);
 
@@ -65,7 +78,16 @@ class RoomController extends AbstractController
             throw new NotFoundHttpException('The room '.$id.' does not exist.');
         }
 
-        $guest = (new Guest())->setUsername($randomGuestNameGenerator->getUsernameForRoom($room->getId()));
+        $username = $randomGuestNameGenerator->getUsernameForRoom($room->getId());
+        $guest = (new Guest())
+            ->setUsername($username)
+            ->setToken($tokenFactory->createToken([
+                'claims' => [
+                    'username' => $username,
+                    'roomId' => $room->getId(),
+                ],
+            ])->toString())
+        ;
 
         $room->addGuest($guest);
         $dm->flush();
@@ -108,9 +130,33 @@ class RoomController extends AbstractController
             throw new NotFoundHttpException('The room does not exist');
         }
 
-        if ($jwt != $room->getToken()) {
+        /** @var Plain $parsedToken */
+        $parsedToken = $tokenFactory->parseToken($jwt);
+        $claims = $parsedToken->claims()->all();
+
+        if (!isset($claims['roomId']) || !isset($claims['username'])) {
+            throw new AccessDeniedHttpException('Unexpected JWT token payload');
+        }
+
+        if ($claims['roomId'] != $room->getId()) {
             throw new AccessDeniedHttpException('JWT Token does not belong to this room');
         }
+
+        $guestIsDisconnected = true;
+        foreach ($room->getGuests() as $guest) {
+            if ($guest->getUsername() == $claims['username']) {
+                $guestIsDisconnected = false;
+                if (Guest::ROLE_GUEST == $guest->getRole()) {
+                    throw new AccessDeniedHttpException("You don't have the permission to add song to this room");
+                }
+            }
+        }
+
+        if ($guestIsDisconnected) {
+            throw new AccessDeniedHttpException('Guest is disconnected');
+        }
+
+        // check if guest has role
         $song = (new Song())->setUrl($request->request->get('url'));
 
         $room->addSong($song);
