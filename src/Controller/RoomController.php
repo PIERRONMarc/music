@@ -9,16 +9,15 @@ use App\DTO\JoinRoomDTO;
 use App\Exception\FormHttpException;
 use App\Form\SongType;
 use App\Service\Jwt\TokenFactory;
+use App\Service\Jwt\TokenValidator;
 use App\Service\RandomNameGenerator\GuestName\RandomGuestNameGenerator;
 use App\Service\RandomNameGenerator\RoomName\RandomRoomNameGenerator;
 use Doctrine\ODM\MongoDB\DocumentManager;
-use Lcobucci\JWT\Token\Plain;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
 class RoomController extends AbstractController
@@ -99,23 +98,13 @@ class RoomController extends AbstractController
     }
 
     #[Route('room/{id}/song', name: 'add_song', methods: ['POST'])]
-    public function addSong(string $id, DocumentManager $dm, Request $request, TokenFactory $tokenFactory): Response
-    {
-        $jwt = $request->headers->get('Authorization');
-
-        if (!$jwt) {
-            throw new UnauthorizedHttpException('Bearer', 'JWT Token not found');
-        }
-
-        if (!str_starts_with($jwt, 'Bearer ') && !str_starts_with($jwt, 'bearer ')) {
-            throw new UnauthorizedHttpException('Bearer', "The Authorization scheme named: 'Bearer' was not found");
-        }
-
-        $jwt = explode(' ', $jwt)[1];
-
-        if (!$tokenFactory->validateToken($jwt)) {
-            throw new UnauthorizedHttpException('Bearer', 'Invalid JWT Token');
-        }
+    public function addSong(
+        string $id,
+        DocumentManager $dm,
+        Request $request,
+        TokenValidator $tokenValidator
+    ): Response {
+        $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
 
         $form = $this->createForm(SongType::class);
         $form->submit($request->request->all());
@@ -124,27 +113,21 @@ class RoomController extends AbstractController
             throw new FormHttpException($form);
         }
 
+        $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'username']);
+
         /** @var Room|null $room */
         $room = $dm->getRepository(Room::class)->findOneBy(['id' => str_replace('-', '', $id)]);
         if (!$room) {
             throw new NotFoundHttpException('The room does not exist');
         }
 
-        /** @var Plain $parsedToken */
-        $parsedToken = $tokenFactory->parseToken($jwt);
-        $claims = $parsedToken->claims()->all();
-
-        if (!isset($claims['roomId']) || !isset($claims['username'])) {
-            throw new AccessDeniedHttpException('Unexpected JWT token payload');
-        }
-
-        if ($claims['roomId'] != $room->getId()) {
+        if ($payload['roomId'] != $room->getId()) {
             throw new AccessDeniedHttpException('JWT Token does not belong to this room');
         }
 
         $guestIsDisconnected = true;
         foreach ($room->getGuests() as $guest) {
-            if ($guest->getUsername() == $claims['username']) {
+            if ($guest->getUsername() == $payload['username']) {
                 $guestIsDisconnected = false;
                 if (Guest::ROLE_GUEST == $guest->getRole()) {
                     throw new AccessDeniedHttpException("You don't have the permission to add song to this room");
@@ -156,7 +139,6 @@ class RoomController extends AbstractController
             throw new AccessDeniedHttpException('Guest is disconnected');
         }
 
-        // check if guest has role
         $song = (new Song())->setUrl($request->request->get('url'));
 
         $room->addSong($song);
