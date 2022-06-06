@@ -33,7 +33,7 @@ class RoomControllerTest extends WebTestCase
         $this->assertIsString($data['host']['username']);
         $this->assertIsString($data['token']);
         $this->assertIsArray($data['songs']);
-        $this->assertIsArray($data['guests']);
+        $this->assertIsArray($data['guests'][0]); // assert host is stored in guest list
 
         $this->assertResponseIsSuccessful();
     }

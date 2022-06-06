@@ -31,8 +31,10 @@ class RoomController extends AbstractController
         RandomGuestNameGenerator $randomGuestNameGenerator,
         TokenFactory $tokenFactory
     ): Response {
+        $host = (new Guest())->setUsername($randomGuestNameGenerator->getUsername());
         $room = (new Room())
-            ->setHost((new Guest())->setUsername($randomGuestNameGenerator->getUsername()))
+            ->setHost($host)
+            ->addGuest($host)
             ->setName($randomRoomNameGenerator->getName())
         ;
         $room->setToken($tokenFactory->createToken(['claims' => ['name' => $room->getName()]])->toString());
