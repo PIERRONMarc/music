@@ -12,8 +12,6 @@ use App\Service\Jwt\TokenFactory;
 use App\Service\RandomNameGenerator\GuestName\RandomGuestNameGenerator;
 use App\Service\RandomNameGenerator\RoomName\RandomRoomNameGenerator;
 use Doctrine\ODM\MongoDB\DocumentManager;
-use Lcobucci\JWT\Encoding\JoseEncoder;
-use Lcobucci\JWT\Token\Parser;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -93,7 +91,7 @@ class RoomController extends AbstractController
 
         $jwt = explode(' ', $jwt)[1];
 
-        if (!$tokenFactory->validateToken((new Parser(new JoseEncoder()))->parse($jwt))) {
+        if (!$tokenFactory->validateToken($jwt)) {
             throw new UnauthorizedHttpException('Bearer', 'Invalid JWT Token');
         }
 

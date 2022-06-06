@@ -3,8 +3,6 @@
 namespace App\Tests\Service\Jwt;
 
 use App\Service\Jwt\TokenFactory;
-use Lcobucci\JWT\Encoding\JoseEncoder;
-use Lcobucci\JWT\Token\Parser;
 use Lcobucci\JWT\Token\Plain;
 use PHPUnit\Framework\TestCase;
 
@@ -33,8 +31,8 @@ class TokenFactoryTest extends TestCase
     public function testTokenValidation(): void
     {
         $tokenFactory = new TokenFactory(self::PRIVATE_KEY);
-        $validToken = $tokenFactory->createToken();
-        $invalidToken = (new Parser(new JoseEncoder()))->parse('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c');
+        $validToken = $tokenFactory->createToken()->toString();
+        $invalidToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
 
         $this->assertTrue($tokenFactory->validateToken($validToken));
         $this->assertFalse($tokenFactory->validateToken($invalidToken));

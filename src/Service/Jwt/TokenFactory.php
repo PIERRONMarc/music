@@ -3,9 +3,10 @@
 namespace App\Service\Jwt;
 
 use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Signer\Key\InMemory;
-use Lcobucci\JWT\Token;
+use Lcobucci\JWT\Token\Parser;
 use Lcobucci\JWT\Token\Plain;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -50,8 +51,10 @@ class TokenFactory
         ]);
     }
 
-    public function validateToken(Token $token): bool
+    public function validateToken(string $token): bool
     {
+        $token = (new Parser(new JoseEncoder()))->parse($token);
+
         return $this
             ->config
             ->validator()
