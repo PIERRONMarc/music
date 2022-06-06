@@ -28,11 +28,6 @@ class Room
     private Guest $host;
 
     /**
-     * @MongoDB\Field(type="string")
-     */
-    private string $token;
-
-    /**
      * @MongoDB\EmbedMany(targetDocument=Song::class)
      */
     private Collection $songs;
@@ -79,18 +74,6 @@ class Room
     public function getHost(): Guest
     {
         return $this->host;
-    }
-
-    public function setToken(string $token): self
-    {
-        $this->token = $token;
-
-        return $this;
-    }
-
-    public function getToken(): string
-    {
-        return $this->token;
     }
 
     public function getSongs(): Collection

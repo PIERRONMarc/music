@@ -4,6 +4,7 @@ namespace App\Tests\Controller;
 
 use App\Document\Room;
 use App\Document\Song;
+use App\Service\Jwt\TokenFactory;
 use App\Tests\DatabaseTrait;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Exception;
@@ -31,9 +32,10 @@ class RoomControllerTest extends WebTestCase
         $this->assertMatchesRegularExpression($uuidPattern, $data['id'] ?? false, 'Invalid UUID');
         $this->assertIsString($data['name']);
         $this->assertIsString($data['host']['username']);
-        $this->assertIsString($data['token']);
+        $this->assertIsString($data['host']['token']);
+        $this->assertSame('ADMIN', $data['host']['role']);
         $this->assertIsArray($data['songs']);
-        $this->assertIsArray($data['guests'][0]); // assert host is stored in guest list
+        $this->assertIsArray($data['guests'][0]);
 
         $this->assertResponseIsSuccessful();
     }
@@ -104,11 +106,12 @@ class RoomControllerTest extends WebTestCase
         $data = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertIsString($data['guest']['username']);
+        $this->assertSame('GUEST', $data['guest']['role']);
+        $this->assertIsString($data['guest']['token']);
         $this->assertIsString($data['room']['id']);
         $this->assertIsString($data['room']['name']);
         $this->assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $data['room']['songs'][0]['url']);
         $this->assertSame($data['guest']['username'], $data['room']['guests'][0]['username'], 'Actual guest is not added to the guest list of the room');
-        $this->assertFalse(isset($data['room']['token']));
     }
 
     public function testJoinARoomThatDoesntExist(): void
@@ -134,10 +137,10 @@ class RoomControllerTest extends WebTestCase
         $room = json_decode($this->client->getResponse()->getContent(), true);
 
         // song must be returned
-        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song?roomToken='.$room['token'], [
+        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song', [
            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         ], [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$room['token'],
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
         ]);
         $data = json_decode($this->client->getResponse()->getContent(), true);
 
@@ -156,10 +159,10 @@ class RoomControllerTest extends WebTestCase
         $room = json_decode($this->client->getResponse()->getContent(), true);
 
         // song is not from youtube
-        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song?roomToken='.$room['token'], [
+        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song', [
             'url' => 'https://www.dailymotion.com/video/x8amd6r?playlist=x5nmbq',
         ], [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$room['token'],
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
         ]);
         $data = json_decode($this->client->getResponse()->getContent(), true);
 
@@ -167,10 +170,10 @@ class RoomControllerTest extends WebTestCase
         $this->assertSame('This value is not a valid Youtube video URL.', $data['violations'][0]['message']);
 
         // url is wrong
-        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song?roomToken='.$room['token'], [
+        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song', [
             'url' => 'htts:/www.youtube.com/watch?v=8BCQtYiagvw',
         ], [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$room['token'],
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
         ]);
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertSame('This value is not a valid Youtube video URL.', $data['violations'][0]['message']);
@@ -219,11 +222,30 @@ class RoomControllerTest extends WebTestCase
         $this->client->jsonRequest('POST', '/room/'.$room1['id'].'/song', [
             'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         ], [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$room2['token'],
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room2['host']['token'],
         ]);
         $data = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertSame('JWT Token does not belong to this room', $data['title']);
+        $this->assertSame(403, $data['status']);
+    }
+
+    public function testAddSongWithWrongRole(): void
+    {
+        $this->client->jsonRequest('POST', '/room');
+        $room = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->client->request('GET', '/join/'.$room['id']);
+        $guest = json_decode($this->client->getResponse()->getContent(), true)['guest'];
+
+        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song', [
+            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$guest['token'],
+        ]);
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertSame("You don't have the permission to add song to this room", $data['title']);
         $this->assertSame(403, $data['status']);
     }
 
@@ -235,12 +257,32 @@ class RoomControllerTest extends WebTestCase
         $this->client->jsonRequest('POST', '/room/15686e63b72b3b20aaecd3186ff2c42a/song', [
             'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         ], [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$room['token'],
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
         ]);
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertSame('The room does not exist', $data['title']);
         $this->assertSame(404, $data['status']);
+    }
+
+    public function testAddSongWithWrongClaimsInJWT(): void
+    {
+        /** @var TokenFactory $tokenFactory */
+        $tokenFactory = $this->getContainer()->get(TokenFactory::class);
+        $token = $tokenFactory->createToken();
+
+        $this->client->jsonRequest('POST', '/room');
+        $room = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song', [
+            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token->toString(),
+        ]);
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertSame('Unexpected JWT token payload', $data['title']);
+        $this->assertSame(403, $data['status']);
     }
 
     /**

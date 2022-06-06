@@ -6,6 +6,7 @@ use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Signer\Key\InMemory;
+use Lcobucci\JWT\Token;
 use Lcobucci\JWT\Token\Parser;
 use Lcobucci\JWT\Token\Plain;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
@@ -53,12 +54,17 @@ class TokenFactory
 
     public function validateToken(string $token): bool
     {
-        $token = (new Parser(new JoseEncoder()))->parse($token);
+        $token = $this->parseToken($token);
 
         return $this
             ->config
             ->validator()
             ->validate($token, new SignedWith($this->config->signer(), $this->config->signingKey()))
         ;
+    }
+
+    public function parseToken(string $token): Token
+    {
+        return (new Parser(new JoseEncoder()))->parse($token);
     }
 }
