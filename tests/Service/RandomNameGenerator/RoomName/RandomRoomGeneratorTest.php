@@ -26,7 +26,7 @@ class RandomRoomGeneratorTest extends TestCase
         $this->assertSame('Red Rocks', $generator->getName());
     }
 
-    public function testTheSameNameCantBeGeneratedTwice(): void
+    public function testNameIsUniq(): void
     {
         $randomizer = $this->createMock(RandomizerInterface::class);
         $randomizer->method('mtRand')->willReturn(0);

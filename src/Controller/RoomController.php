@@ -32,7 +32,7 @@ class RoomController extends AbstractController
         TokenFactory $tokenFactory
     ): Response {
         $room = (new Room())
-            ->setHost((new Guest())->setUsername($randomGuestNameGenerator->getName()))
+            ->setHost((new Guest())->setUsername($randomGuestNameGenerator->getUsername()))
             ->setName($randomRoomNameGenerator->getName())
         ;
         $room->setToken($tokenFactory->createToken(['claims' => ['name' => $room->getName()]])->toString());
@@ -59,12 +59,13 @@ class RoomController extends AbstractController
         DocumentManager $dm,
         RandomGuestNameGenerator $randomGuestNameGenerator
     ): Response {
-        $guest = (new Guest())->setUsername($randomGuestNameGenerator->getName());
         $room = $dm->getRepository(Room::class)->findOneBy(['id' => str_replace('-', '', $id)]);
 
         if (!$room) {
             throw new NotFoundHttpException('The room '.$id.' does not exist.');
         }
+
+        $guest = (new Guest())->setUsername($randomGuestNameGenerator->getUsernameForRoom($room->getId()));
 
         $room->addGuest($guest);
         $dm->flush();

@@ -5,11 +5,10 @@ namespace App\Service\RandomNameGenerator\RoomName;
 use App\Document\Room;
 use App\Repository\RoomRepository;
 use App\Service\Randomizer\RandomizerInterface;
-use App\Service\RandomNameGenerator\RandomNameGeneratorInterface;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\MongoDBException;
 
-class RandomRoomNameGenerator implements RandomNameGeneratorInterface
+class RandomRoomNameGenerator
 {
     private RandomizerInterface $randomizer;
 
@@ -30,7 +29,7 @@ class RandomRoomNameGenerator implements RandomNameGeneratorInterface
     }
 
     /**
-     * {@inheritDoc}
+     * Get a randomly generated name.
      *
      * @throws MongoDBException
      */

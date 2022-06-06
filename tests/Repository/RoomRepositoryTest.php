@@ -2,6 +2,7 @@
 
 namespace App\Tests\Repository;
 
+use App\Document\Guest;
 use App\Document\Room;
 use App\Repository\RoomRepository;
 use App\Tests\DatabaseTrait;
@@ -33,5 +34,23 @@ class RoomRepositoryTest extends KernelTestCase
         /** @var RoomRepository */
         $repository = $dm->getRepository(Room::class);
         $this->assertSame(2, $repository->countRoomWithNameLike('Red Rocks'));
+    }
+
+    public function testThatCorrectNumberOfGuestMatchingAStringIsReturned(): void
+    {
+        $dm = $this->getDocumentManager();
+        $room = (new Room())
+            ->setName('Red Rocks')
+            ->addGuest((new Guest())->setUsername('Adorable Advaark'))
+            ->addGuest((new Guest())->setUsername('Adorable Advaark 2'))
+            ->addGuest((new Guest())->setUsername('Adorable Ape'))
+        ;
+        $dm->persist($room);
+        $dm->flush();
+
+        /** @var RoomRepository */
+        $repository = $dm->getRepository(Room::class);
+        $this->assertSame(2, $repository->countGuestWithNameLike('Adorable Advaark', $room->getId()));
+        $this->assertSame(0, $repository->countGuestWithNameLike('Adorable Advaark', 'room that does not exist'));
     }
 }
