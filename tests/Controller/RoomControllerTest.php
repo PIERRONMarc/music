@@ -4,11 +4,9 @@ namespace App\Tests\Controller;
 
 use App\Document\Room;
 use App\Document\Song;
-use App\Service\Jwt\TokenFactory;
 use App\Tests\DatabaseTrait;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Exception;
-use Generator;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -179,38 +177,6 @@ class RoomControllerTest extends WebTestCase
         $this->assertSame('This value is not a valid Youtube video URL.', $data['violations'][0]['message']);
     }
 
-    /**
-     * @dataProvider provideWrongAuthorization
-     */
-    public function testAddSongAuthorization(?string $jwt, string $expectedTitle): void
-    {
-        $this->client->jsonRequest('POST', '/room/15686e63b72b3b20aaecd3186ff2c42a/song', [
-            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        ], [
-            'HTTP_AUTHORIZATION' => $jwt,
-        ]);
-        $data = json_decode($this->client->getResponse()->getContent(), true);
-
-        $this->assertSame($expectedTitle, $data['title']);
-        $this->assertSame(401, $data['status']);
-    }
-
-    private function provideWrongAuthorization(): Generator
-    {
-        yield [
-            'jwt' => null,
-            'expectedTitle' => 'JWT Token not found',
-        ];
-        yield [
-            'jwt' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
-            'expectedTitle' => "The Authorization scheme named: 'Bearer' was not found",
-        ];
-        yield [
-            'jwt' => 'bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
-            'expectedTitle' => 'Invalid JWT Token',
-        ];
-    }
-
     public function testAddSongJWTBelongToTheRoom(): void
     {
         $this->client->jsonRequest('POST', '/room');
@@ -263,26 +229,6 @@ class RoomControllerTest extends WebTestCase
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertSame('The room does not exist', $data['title']);
         $this->assertSame(404, $data['status']);
-    }
-
-    public function testAddSongWithWrongClaimsInJWT(): void
-    {
-        /** @var TokenFactory $tokenFactory */
-        $tokenFactory = $this->getContainer()->get(TokenFactory::class);
-        $token = $tokenFactory->createToken();
-
-        $this->client->jsonRequest('POST', '/room');
-        $room = json_decode($this->client->getResponse()->getContent(), true);
-
-        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song', [
-            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        ], [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$token->toString(),
-        ]);
-        $data = json_decode($this->client->getResponse()->getContent(), true);
-
-        $this->assertSame('Unexpected JWT token payload', $data['title']);
-        $this->assertSame(403, $data['status']);
     }
 
     /**
