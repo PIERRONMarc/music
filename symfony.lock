@@ -56,9 +56,6 @@
     "doctrine/event-manager": {
         "version": "1.1.1"
     },
-    "doctrine/inflector": {
-        "version": "2.0.4"
-    },
     "doctrine/instantiator": {
         "version": "1.4.1"
     },
@@ -371,15 +368,6 @@
     },
     "symfony/http-kernel": {
         "version": "v6.0.7"
-    },
-    "symfony/maker-bundle": {
-        "version": "1.41",
-        "recipe": {
-            "repo": "github.com/symfony/recipes",
-            "branch": "main",
-            "version": "1.0",
-            "ref": "fadbfe33303a76e25cb63401050439aa9b1a9c7f"
-        }
     },
     "symfony/options-resolver": {
         "version": "v6.0.3"
