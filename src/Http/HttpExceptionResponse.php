@@ -5,7 +5,7 @@ namespace App\Http;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
- * HTTP exception response based on RFC7807
+ * HTTP exception response based on RFC7807.
  */
 class HttpExceptionResponse extends JsonResponse
 {
