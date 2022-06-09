@@ -143,12 +143,21 @@ class RoomControllerTest extends WebTestCase
         $data = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $data['url']);
+        $this->assertIsString($data['id']);
 
         // song must be added in database
         $this->client->request('GET', '/join/'.$room['id']);
         $data = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $data['room']['songs'][0]['url']);
+    }
+
+    public function testAddSongRouteIsSecuredByJWT(): void
+    {
+        $this->client->jsonRequest('POST', '/room/123456/song', [
+            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ]);
+        $this->assertResponseStatusCodeSame(401);
     }
 
     public function testAddSongValidation(): void
@@ -229,6 +238,59 @@ class RoomControllerTest extends WebTestCase
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertSame('The room does not exist', $data['title']);
         $this->assertSame(404, $data['status']);
+    }
+
+    public function testDeleteSong(): void
+    {
+        $this->client->jsonRequest('POST', '/room');
+        $room = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song', [
+            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
+        ]);
+        $song = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->client->jsonRequest('DELETE', '/room/'.$room['id'].'/song/'.$song['id'], [
+            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
+        ]);
+
+        $this->assertResponseStatusCodeSame(204);
+    }
+
+    public function testDeleteSongRouteIsSecuredByJWT(): void
+    {
+        $this->client->jsonRequest('DELETE', '/room/123456/song/123456');
+        $this->assertResponseStatusCodeSame(401);
+    }
+
+    public function testDeleteSongWithWrongRole(): void
+    {
+        $this->client->jsonRequest('POST', '/room');
+        $room = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->client->request('GET', '/join/'.$room['id']);
+        $guest = json_decode($this->client->getResponse()->getContent(), true)['guest'];
+
+        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song', [
+            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
+        ]);
+        $song = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->client->jsonRequest('DELETE', '/room/'.$room['id'].'/song/'.$song['id'], [
+            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$guest['token'],
+        ]);
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertSame("You don't have the permission to add song to this room", $data['title']);
+        $this->assertSame(403, $data['status']);
     }
 
     /**

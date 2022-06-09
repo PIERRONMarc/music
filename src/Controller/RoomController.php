@@ -8,12 +8,14 @@ use App\Document\Song;
 use App\DTO\JoinRoomDTO;
 use App\Exception\FormHttpException;
 use App\Form\SongType;
+use App\Repository\RoomRepository;
 use App\Service\Jwt\TokenFactory;
 use App\Service\Jwt\TokenValidator;
 use App\Service\RandomNameGenerator\GuestName\RandomGuestNameGenerator;
 use App\Service\RandomNameGenerator\RoomName\RandomRoomNameGenerator;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -145,5 +147,48 @@ class RoomController extends AbstractController
         $dm->flush();
 
         return $this->json($song);
+    }
+
+    #[Route('room/{roomId}/song/{songId}', name: 'delete_song', methods: ['DELETE'])]
+    public function deleteSong(
+        DocumentManager $documentManager,
+        string $roomId,
+        string $songId,
+        TokenValidator $tokenValidator,
+        Request $request
+    ): Response {
+        $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
+
+        $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'username']);
+
+        /** @var Room|null $room */
+        $room = $documentManager->getRepository(Room::class)->findOneBy(['id' => str_replace('-', '', $roomId)]);
+        if (!$room) {
+            throw new NotFoundHttpException('The room does not exist');
+        }
+
+        if ($payload['roomId'] != $room->getId()) {
+            throw new AccessDeniedHttpException('JWT Token does not belong to this room');
+        }
+
+        $guestIsDisconnected = true;
+        foreach ($room->getGuests() as $guest) {
+            if ($guest->getUsername() == $payload['username']) {
+                $guestIsDisconnected = false;
+                if (Guest::ROLE_GUEST == $guest->getRole()) {
+                    throw new AccessDeniedHttpException("You don't have the permission to add song to this room");
+                }
+            }
+        }
+
+        if ($guestIsDisconnected) {
+            throw new AccessDeniedHttpException('Guest is disconnected');
+        }
+
+        /** @var RoomRepository $roomRepository */
+        $roomRepository = $documentManager->getRepository(Room::class);
+        $roomRepository->deleteSong($roomId, $songId);
+
+        return new JsonResponse([], Response::HTTP_NO_CONTENT);
     }
 }

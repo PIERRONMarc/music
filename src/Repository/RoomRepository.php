@@ -2,8 +2,11 @@
 
 namespace App\Repository;
 
+use App\Document\Room;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Doctrine\ODM\MongoDB\Repository\DocumentRepository;
+use Exception;
+use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\Regex;
 use MongoDB\Driver\Cursor;
 
@@ -69,5 +72,26 @@ class RoomRepository extends DocumentRepository
         }
 
         return 0;
+    }
+
+    /**
+     * @throws MongoDBException
+     */
+    public function deleteSong(string $roomId, string $songId): ?Room
+    {
+        try {
+            $songId = new ObjectId($songId);
+        } catch (Exception $exception) {
+            return null;
+        }
+
+        return $this->createQueryBuilder()
+            ->findAndUpdate()
+            ->returnNew()
+            ->field('id')->equals($roomId)
+            ->field('songs')->pull(['_id' => $songId])
+            ->getQuery()
+            ->execute()
+        ;
     }
 }
