@@ -4,6 +4,7 @@ namespace App\Tests\Repository;
 
 use App\Document\Guest;
 use App\Document\Room;
+use App\Document\Song;
 use App\Repository\RoomRepository;
 use App\Tests\DatabaseTrait;
 use Exception;
@@ -52,5 +53,30 @@ class RoomRepositoryTest extends KernelTestCase
         $repository = $dm->getRepository(Room::class);
         $this->assertSame(2, $repository->countGuestWithNameLike('Adorable Advaark', $room->getId()));
         $this->assertSame(0, $repository->countGuestWithNameLike('Adorable Advaark', 'room that does not exist'));
+    }
+
+    public function testDeleteSong(): void
+    {
+        $song = (new Song())->setUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+        $room = (new Room())
+            ->setName('Red Rocks')
+            ->addSong($song)
+        ;
+        $dm = $this->getDocumentManager();
+        $room2 = (new Room())
+            ->setName('Red Rocks')
+            ->addSong($song)
+        ;
+        $dm->persist($room2);
+        $dm->persist($room);
+        $dm->flush();
+
+        /** @var RoomRepository */
+        $repository = $dm->getRepository(Room::class);
+        $updatedRoom = $repository->deleteSong($room->getId(), $song->getId());
+
+        $this->assertEmpty($updatedRoom->getSongs()->toArray());
+        $this->assertNull($repository->deleteSong('123', '123')); // assert with wrong ObjectId format for $songId parameter
+        $this->assertNull($repository->deleteSong('123', '6290ad1746e25627850c0982'));
     }
 }
