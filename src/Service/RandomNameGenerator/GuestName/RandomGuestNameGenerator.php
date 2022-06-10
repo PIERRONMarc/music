@@ -34,26 +34,26 @@ class RandomGuestNameGenerator
     }
 
     /**
-     * Get a randomly generated username and make sure he's uniq for a given room.
+     * Get a randomly generated guest name and make sure he's uniq for a given room.
      */
-    public function getUsernameForRoom(string $roomId): string
+    public function getNameForRoom(string $roomId): string
     {
-        $username = $this->getUsername();
-        $count = $this->roomRepository->countGuestWithNameLike($username, $roomId);
+        $name = $this->getName();
+        $count = $this->roomRepository->countGuestWithNameLike($name, $roomId);
 
         if ($count > 0) {
             ++$count;
 
-            return $username.' '.$count;
+            return $name.' '.$count;
         }
 
-        return $username;
+        return $name;
     }
 
     /**
-     * Get a randomly generated username.
+     * Get a randomly generated guest name.
      */
-    public function getUsername(): string
+    public function getName(): string
     {
         $adjective = $this->adjectives[$this->randomizer->mtRand(0, \count($this->adjectives) - 1)];
         $noun = $this->nouns[$this->randomizer->mtRand(0, \count($this->nouns) - 1)];

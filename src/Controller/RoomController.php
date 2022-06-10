@@ -32,9 +32,9 @@ class RoomController extends AbstractController
         RandomGuestNameGenerator $randomGuestNameGenerator,
         TokenFactory $tokenFactory
     ): Response {
-        $username = $randomGuestNameGenerator->getUsername();
+        $guestName = $randomGuestNameGenerator->getName();
         $host = (new Guest())
-            ->setUsername($username)
+            ->setName($guestName)
             ->setRole(Guest::ROLE_ADMIN)
         ;
         $room = (new Room())
@@ -48,7 +48,7 @@ class RoomController extends AbstractController
 
         $host->setToken($tokenFactory->createToken([
             'claims' => [
-                'username' => $username,
+                'guestName' => $guestName,
                 'roomId' => $room->getId(),
             ],
         ])->toString());
@@ -80,12 +80,12 @@ class RoomController extends AbstractController
             throw new NotFoundHttpException('The room '.$id.' does not exist.');
         }
 
-        $username = $randomGuestNameGenerator->getUsernameForRoom($room->getId());
+        $guestName = $randomGuestNameGenerator->getNameForRoom($room->getId());
         $guest = (new Guest())
-            ->setUsername($username)
+            ->setName($guestName)
             ->setToken($tokenFactory->createToken([
                 'claims' => [
-                    'username' => $username,
+                    'guestName' => $guestName,
                     'roomId' => $room->getId(),
                 ],
             ])->toString())
@@ -117,7 +117,7 @@ class RoomController extends AbstractController
             throw new FormHttpException($form);
         }
 
-        $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'username']);
+        $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'guestName']);
 
         /** @var Room|null $room */
         $room = $dm->getRepository(Room::class)->findOneBy(['id' => str_replace('-', '', $id)]);
@@ -129,7 +129,7 @@ class RoomController extends AbstractController
             throw new AccessDeniedHttpException('JWT Token does not belong to this room');
         }
 
-        if ($roomAuthorization->guestIsGranted(Guest::ROLE_GUEST, $payload['username'], $room->getGuests()->toArray())) {
+        if ($roomAuthorization->guestIsGranted(Guest::ROLE_GUEST, $payload['guestName'], $room->getGuests()->toArray())) {
             throw new AccessDeniedHttpException("You don't have the permission to add song to this room");
         }
 
@@ -152,7 +152,7 @@ class RoomController extends AbstractController
     ): Response {
         $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
 
-        $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'username']);
+        $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'guestName']);
 
         /** @var Room|null $room */
         $room = $documentManager->getRepository(Room::class)->findOneBy(['id' => str_replace('-', '', $roomId)]);
@@ -164,7 +164,7 @@ class RoomController extends AbstractController
             throw new AccessDeniedHttpException('JWT Token does not belong to this room');
         }
 
-        if ($roomAuthorization->guestIsGranted(Guest::ROLE_GUEST, $payload['username'], $room->getGuests()->toArray())) {
+        if ($roomAuthorization->guestIsGranted(Guest::ROLE_GUEST, $payload['guestName'], $room->getGuests()->toArray())) {
             throw new AccessDeniedHttpException("You don't have the permission to add song to this room");
         }
 

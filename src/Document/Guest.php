@@ -20,7 +20,7 @@ class Guest
     /**
      * @MongoDB\Field(type="string")
      */
-    private string $username;
+    private string $name;
 
     /**
      * @MongoDB\Field(type="string")
@@ -44,16 +44,16 @@ class Guest
         return $this;
     }
 
-    public function setUsername(string $username): self
+    public function setName(string $name): self
     {
-        $this->username = $username;
+        $this->name = $name;
 
         return $this;
     }
 
-    public function getUsername(): string
+    public function getName(): string
     {
-        return $this->username;
+        return $this->name;
     }
 
     public function getRole(): string

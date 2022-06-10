@@ -15,8 +15,8 @@ class RoomAuthorizationTest extends KernelTestCase
 
     public function testGuestIsGranted(): void
     {
-        $guest = (new Guest())->setUsername('Angry ape');
-        $host = (new Guest())->setUsername('Happy ape');
+        $guest = (new Guest())->setName('Angry ape');
+        $host = (new Guest())->setName('Happy ape');
         $room = (new Room())
             ->addGuest($guest)
             ->addGuest($host)
@@ -27,8 +27,8 @@ class RoomAuthorizationTest extends KernelTestCase
 
         $roomAuthorization = new RoomAuthorization();
 
-        $this->assertTrue($roomAuthorization->guestIsGranted(Guest::ROLE_GUEST, $guest->getUsername(), $room->getGuests()->toArray()));
-        $this->assertFalse($roomAuthorization->guestIsGranted(Guest::ROLE_ADMIN, $guest->getUsername(), $room->getGuests()->toArray()));
+        $this->assertTrue($roomAuthorization->guestIsGranted(Guest::ROLE_GUEST, $guest->getName(), $room->getGuests()->toArray()));
+        $this->assertFalse($roomAuthorization->guestIsGranted(Guest::ROLE_ADMIN, $guest->getName(), $room->getGuests()->toArray()));
         $this->assertFalse($roomAuthorization->guestIsGranted(Guest::ROLE_ADMIN, 'name of inexistant guest', $room->getGuests()->toArray()));
     }
 
