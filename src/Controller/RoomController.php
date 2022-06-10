@@ -13,6 +13,7 @@ use App\Service\Jwt\TokenFactory;
 use App\Service\Jwt\TokenValidator;
 use App\Service\RandomNameGenerator\GuestName\RandomGuestNameGenerator;
 use App\Service\RandomNameGenerator\RoomName\RandomRoomNameGenerator;
+use App\Service\Room\RoomAuthorization;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -104,7 +105,8 @@ class RoomController extends AbstractController
         string $id,
         DocumentManager $dm,
         Request $request,
-        TokenValidator $tokenValidator
+        TokenValidator $tokenValidator,
+        RoomAuthorization $roomAuthorization
     ): Response {
         $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
 
@@ -127,18 +129,8 @@ class RoomController extends AbstractController
             throw new AccessDeniedHttpException('JWT Token does not belong to this room');
         }
 
-        $guestIsDisconnected = true;
-        foreach ($room->getGuests() as $guest) {
-            if ($guest->getUsername() == $payload['username']) {
-                $guestIsDisconnected = false;
-                if (Guest::ROLE_GUEST == $guest->getRole()) {
-                    throw new AccessDeniedHttpException("You don't have the permission to add song to this room");
-                }
-            }
-        }
-
-        if ($guestIsDisconnected) {
-            throw new AccessDeniedHttpException('Guest is disconnected');
+        if ($roomAuthorization->guestIsGranted(Guest::ROLE_GUEST, $payload['username'], $room->getGuests()->toArray())) {
+            throw new AccessDeniedHttpException("You don't have the permission to add song to this room");
         }
 
         $song = (new Song())->setUrl($request->request->get('url'));
@@ -155,7 +147,8 @@ class RoomController extends AbstractController
         string $roomId,
         string $songId,
         TokenValidator $tokenValidator,
-        Request $request
+        Request $request,
+        RoomAuthorization $roomAuthorization
     ): Response {
         $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
 
@@ -171,18 +164,8 @@ class RoomController extends AbstractController
             throw new AccessDeniedHttpException('JWT Token does not belong to this room');
         }
 
-        $guestIsDisconnected = true;
-        foreach ($room->getGuests() as $guest) {
-            if ($guest->getUsername() == $payload['username']) {
-                $guestIsDisconnected = false;
-                if (Guest::ROLE_GUEST == $guest->getRole()) {
-                    throw new AccessDeniedHttpException("You don't have the permission to add song to this room");
-                }
-            }
-        }
-
-        if ($guestIsDisconnected) {
-            throw new AccessDeniedHttpException('Guest is disconnected');
+        if ($roomAuthorization->guestIsGranted(Guest::ROLE_GUEST, $payload['username'], $room->getGuests()->toArray())) {
+            throw new AccessDeniedHttpException("You don't have the permission to add song to this room");
         }
 
         /** @var RoomRepository $roomRepository */

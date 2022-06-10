@@ -13,6 +13,11 @@ class Guest
     public const ROLE_ADMIN = 'ADMIN';
 
     /**
+     * @MongoDB\Id
+     */
+    private string $id;
+
+    /**
      * @MongoDB\Field(type="string")
      */
     private string $username;
@@ -26,6 +31,18 @@ class Guest
      * @var string JWT token to perform action on a room
      */
     private string $token;
+
+    public function getId(): string
+    {
+        return $this->id;
+    }
+
+    public function setId(string $id): self
+    {
+        $this->id = $id;
+
+        return $this;
+    }
 
     public function setUsername(string $username): self
     {
