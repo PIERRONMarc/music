@@ -29,7 +29,7 @@ class RoomControllerTest extends WebTestCase
         $uuidPattern = "/^\{?[0-9a-f]{8}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{12}\}?$/i";
         $this->assertMatchesRegularExpression($uuidPattern, $data['id'] ?? false, 'Invalid UUID');
         $this->assertIsString($data['name']);
-        $this->assertIsString($data['host']['username']);
+        $this->assertIsString($data['host']['name']);
         $this->assertIsString($data['host']['token']);
         $this->assertSame('ADMIN', $data['host']['role']);
         $this->assertIsArray($data['songs']);
@@ -103,13 +103,13 @@ class RoomControllerTest extends WebTestCase
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
 
-        $this->assertIsString($data['guest']['username']);
+        $this->assertIsString($data['guest']['name']);
         $this->assertSame('GUEST', $data['guest']['role']);
         $this->assertIsString($data['guest']['token']);
         $this->assertIsString($data['room']['id']);
         $this->assertIsString($data['room']['name']);
         $this->assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $data['room']['songs'][0]['url']);
-        $this->assertSame($data['guest']['username'], $data['room']['guests'][0]['username'], 'Actual guest is not added to the guest list of the room');
+        $this->assertSame($data['guest']['name'], $data['room']['guests'][0]['name'], 'Actual guest is not added to the guest list of the room');
     }
 
     public function testJoinARoomThatDoesntExist(): void

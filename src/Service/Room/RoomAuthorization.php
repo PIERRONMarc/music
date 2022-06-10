@@ -9,10 +9,10 @@ class RoomAuthorization
     /**
      * @param Guest[] $guests
      */
-    public function guestIsGranted(string $role, string $guestUsername, array $guests): bool
+    public function guestIsGranted(string $role, string $guestName, array $guests): bool
     {
         foreach ($guests as $guest) {
-            if ($guest->getUsername() === $guestUsername) {
+            if ($guest->getName() === $guestName) {
                 if ($role == $guest->getRole()) {
                     return true;
                 }

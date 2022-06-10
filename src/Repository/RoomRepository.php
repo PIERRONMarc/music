@@ -54,7 +54,7 @@ class RoomRepository extends DocumentRepository
                                 'as' => 'guest',
                                 'cond' => [
                                     '$regexMatch' => [
-                                        'input' => '$$guest.username',
+                                        'input' => '$$guest.name',
                                         'regex' => '^'.$name,
                                     ],
                                 ],

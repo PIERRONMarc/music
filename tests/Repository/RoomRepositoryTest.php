@@ -42,9 +42,9 @@ class RoomRepositoryTest extends KernelTestCase
         $dm = $this->getDocumentManager();
         $room = (new Room())
             ->setName('Red Rocks')
-            ->addGuest((new Guest())->setUsername('Adorable Advaark'))
-            ->addGuest((new Guest())->setUsername('Adorable Advaark 2'))
-            ->addGuest((new Guest())->setUsername('Adorable Ape'))
+            ->addGuest((new Guest())->setName('Adorable Advaark'))
+            ->addGuest((new Guest())->setName('Adorable Advaark 2'))
+            ->addGuest((new Guest())->setName('Adorable Ape'))
         ;
         $dm->persist($room);
         $dm->flush();
