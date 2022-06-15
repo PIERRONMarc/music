@@ -54,7 +54,7 @@ class RoomController extends AbstractController
         ])->toString());
         $room->setHost($host);
 
-        return $this->json($room);
+        return $this->json($room, Response::HTTP_CREATED);
     }
 
     #[Route('/room', name: 'get_all_room', methods: ['GET'])]
@@ -138,7 +138,7 @@ class RoomController extends AbstractController
         $room->addSong($song);
         $dm->flush();
 
-        return $this->json($song);
+        return $this->json($song, Response::HTTP_CREATED);
     }
 
     #[Route('room/{roomId}/song/{songId}', name: 'delete_song', methods: ['DELETE'])]
