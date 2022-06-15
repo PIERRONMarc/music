@@ -259,6 +259,10 @@ class RoomControllerTest extends WebTestCase
         ]);
 
         $this->assertResponseStatusCodeSame(204);
+
+        $this->client->jsonRequest('GET', '/join/'.$room['id']);
+        $joinRoomDTO = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertEmpty($joinRoomDTO['room']['songs']);
     }
 
     public function testDeleteSongRouteIsSecuredByJWT(): void
