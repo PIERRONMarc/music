@@ -6,6 +6,7 @@ use App\Repository\RoomRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @MongoDB\Document(collection="rooms", repositoryClass=RoomRepository::class)
@@ -14,11 +15,13 @@ class Room
 {
     /**
      * @MongoDB\Id(strategy="UUID")
+     * @Groups({"get_all_room"})
      */
     private ?string $id = null;
 
     /**
      * @MongoDB\Field(type="string")
+     * @Groups({"get_all_room"})
      */
     private string $name;
 

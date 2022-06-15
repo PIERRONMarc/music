@@ -64,7 +64,7 @@ class RoomController extends AbstractController
         $offset = ($page - 1) * 30;
         $rooms = $dm->getRepository(Room::class)->findBy([], [], 30, $offset);
 
-        return $this->json($rooms);
+        return $this->json($rooms, Response::HTTP_OK, [], ['groups' => 'get_all_room']);
     }
 
     #[Route('/join/{id}', name: 'join_room', methods: ['GET'])]
