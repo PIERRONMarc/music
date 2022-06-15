@@ -26,17 +26,17 @@ class TokenValidator
     public function validateAuthorizationHeaderAndGetToken(?string $authorizationHeader): string
     {
         if (!$authorizationHeader) {
-            throw new UnauthorizedHttpException('Bearer', 'JWT Token not found', null, 401);
+            throw new UnauthorizedHttpException('Bearer', 'JWT Token not found');
         }
 
         if (!str_starts_with($authorizationHeader, 'Bearer ') && !str_starts_with($authorizationHeader, 'bearer ')) {
-            throw new UnauthorizedHttpException('Bearer', "The Authorization scheme named: 'Bearer' was not found", null, 401);
+            throw new UnauthorizedHttpException('Bearer', "The Authorization scheme named: 'Bearer' was not found");
         }
 
         $token = explode(' ', $authorizationHeader)[1];
 
         if (!$this->tokenFactory->validateToken($token)) {
-            throw new UnauthorizedHttpException('Bearer', 'Invalid JWT Token', null, 401);
+            throw new UnauthorizedHttpException('Bearer', 'Invalid JWT Token');
         }
 
         return $token;

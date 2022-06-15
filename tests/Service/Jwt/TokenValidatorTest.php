@@ -16,7 +16,6 @@ class TokenValidatorTest extends KernelTestCase
      */
     public function testFailedValidateAuthorizationHeaderAndGetToken(?string $token, string $expectedTitle, bool $validateTokenResult = true): void
     {
-        $this->expectExceptionCode(401);
         $this->expectExceptionMessage($expectedTitle);
         $this->expectException(UnauthorizedHttpException::class);
 
