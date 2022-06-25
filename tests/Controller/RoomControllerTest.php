@@ -140,16 +140,13 @@ class RoomControllerTest extends WebTestCase
         ], [
             'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
         ]);
-        $data = json_decode($this->client->getResponse()->getContent(), true);
 
-        $this->assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $data['url']);
-        $this->assertIsString($data['id']);
-
-        // song must be added in database
+        // song must be added in database and running as it's the only song in the playlist
         $this->client->request('GET', '/join/'.$room['id']);
         $data = json_decode($this->client->getResponse()->getContent(), true);
 
-        $this->assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $data['room']['songs'][0]['url']);
+        $this->assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $data['room']['currentSong']['url']);
+        $this->assertFalse($data['room']['currentSong']['isPaused']);
     }
 
     public function testAddSongRouteIsSecuredByJWT(): void
@@ -250,6 +247,12 @@ class RoomControllerTest extends WebTestCase
         ], [
             'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
         ]);
+
+        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song', [
+            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
+        ]);
         $song = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->client->jsonRequest('DELETE', '/room/'.$room['id'].'/song/'.$song['id'], [
@@ -279,6 +282,11 @@ class RoomControllerTest extends WebTestCase
         $this->client->request('GET', '/join/'.$room['id']);
         $guest = json_decode($this->client->getResponse()->getContent(), true)['guest'];
 
+        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song', [
+            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
+        ]);
         $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song', [
             'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         ], [

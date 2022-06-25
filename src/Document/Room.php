@@ -31,6 +31,11 @@ class Room
     private Guest $host;
 
     /**
+     * @MongoDB\EmbedOne(targetDocument=Song::class)
+     */
+    private ?Song $currentSong = null;
+
+    /**
      * @MongoDB\EmbedMany(targetDocument=Song::class)
      */
     private Collection $songs;
@@ -77,6 +82,18 @@ class Room
     public function getHost(): Guest
     {
         return $this->host;
+    }
+
+    public function getCurrentSong(): ?Song
+    {
+        return $this->currentSong;
+    }
+
+    public function setCurrentSong(?Song $currentSong): self
+    {
+        $this->currentSong = $currentSong;
+
+        return $this;
     }
 
     public function getSongs(): Collection
