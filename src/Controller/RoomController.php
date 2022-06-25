@@ -134,8 +134,12 @@ class RoomController extends AbstractController
         }
 
         $song = (new Song())->setUrl($request->request->get('url'));
+        if (null === $room->getCurrentSong()) {
+            $room->setCurrentSong($song);
+        } else {
+            $room->addSong($song);
+        }
 
-        $room->addSong($song);
         $dm->flush();
 
         return $this->json($song, Response::HTTP_CREATED);
