@@ -70,6 +70,12 @@ class SongControllerTest extends WebTestCase
         ]);
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertSame('This value is not a valid Youtube video URL.', $data['violations'][0]['message']);
+
+        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song', [], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
+        ]);
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertSame('This value should not be null.', $data['violations'][0]['message']);
     }
 
     public function testAddSongJWTBelongToTheRoom(): void
@@ -192,6 +198,140 @@ class SongControllerTest extends WebTestCase
 
         $this->assertSame("You don't have the permission to add song to this room", $data['title']);
         $this->assertSame(403, $data['status']);
+    }
+
+    public function testCurrentSongIsPaused(): void
+    {
+        $this->client->jsonRequest('POST', '/room');
+        $room = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song', [
+            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
+        ]);
+
+        $this->client->jsonRequest('PATCH', '/room/'.$room['id'].'/current-song', [
+            'isPaused' => true,
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
+        ]);
+        $currentSong = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $currentSong['url']);
+        $this->assertTrue($currentSong['isPaused']);
+    }
+
+    public function testUpdateCurrentSongOfANonExistentRoom(): void
+    {
+        $this->client->jsonRequest('POST', '/room');
+        $room = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->client->jsonRequest('PATCH', '/room/15686e63b72b3b20aaecd3186ff2c42a/current-song', [
+            'isPaused' => true,
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
+        ]);
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertSame('The room does not exist', $data['title']);
+        $this->assertSame(404, $data['status']);
+    }
+
+    public function testUpdateCurrentSongRouteIsSecuredByJWT(): void
+    {
+        $this->client->jsonRequest('PATCH', '/room/123456/current-song', [
+            'isPaused' => true,
+        ]);
+        $this->assertResponseStatusCodeSame(401);
+    }
+
+    public function testUpdateCurrentSongWithWrongRole(): void
+    {
+        $this->client->jsonRequest('POST', '/room');
+        $room = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song', [
+            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
+        ]);
+
+        $this->client->request('GET', '/join/'.$room['id']);
+        $guest = json_decode($this->client->getResponse()->getContent(), true)['guest'];
+
+        $this->client->jsonRequest('PATCH', '/room/'.$room['id'].'/current-song', [
+            'isPaused' => true,
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$guest['token'],
+        ]);
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertSame("You don't have the permission to update the current song in this room", $data['title']);
+        $this->assertSame(403, $data['status']);
+    }
+
+    public function testUpdateCurrentSongJWTBelongToTheRoom(): void
+    {
+        $this->client->jsonRequest('POST', '/room');
+        $room1 = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->client->jsonRequest('POST', '/room');
+        $room2 = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->client->jsonRequest('PATCH', '/room/'.$room1['id'].'/current-song', [
+            'isPaused' => true,
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room2['host']['token'],
+        ]);
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertSame('JWT Token does not belong to this room', $data['title']);
+        $this->assertSame(403, $data['status']);
+    }
+
+    public function testUpdateCurrentSongWhenNoCurrentSong(): void
+    {
+        $this->client->jsonRequest('POST', '/room');
+        $room = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->client->jsonRequest('PATCH', '/room/'.$room['id'].'/current-song', [
+            'isPaused' => true,
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
+        ]);
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertSame('There is no current song', $data['title']);
+        $this->assertSame(404, $data['status']);
+    }
+
+    public function testUpdateCurrentSongValidation(): void
+    {
+        $this->client->jsonRequest('POST', '/room');
+        $room = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->client->jsonRequest('POST', '/room/'.$room['id'].'/song', [
+            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
+        ]);
+
+        $this->client->jsonRequest('PATCH', '/room/'.$room['id'].'/current-song', [], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
+        ]);
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertSame('This value should not be null.', $data['violations'][0]['message']);
+
+        $this->client->jsonRequest('PATCH', '/room/'.$room['id'].'/current-song', [
+            'isPaused' => 'azeaze',
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room['host']['token'],
+        ]);
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertSame('The selected choice is invalid.', $data['violations'][0]['message']);
     }
 
     /**

@@ -7,6 +7,7 @@ use App\Document\Room;
 use App\Document\Song;
 use App\Exception\FormHttpException;
 use App\Form\SongType;
+use App\Form\UpdateCurrentSongType;
 use App\Repository\RoomRepository;
 use App\Service\Jwt\TokenValidator;
 use App\Service\Room\RoomAuthorization;
@@ -98,5 +99,47 @@ class SongController extends AbstractController
         $roomRepository->deleteSong($roomId, $songId);
 
         return new JsonResponse([], Response::HTTP_NO_CONTENT);
+    }
+
+    #[Route('room/{roomId}/current-song', name: 'update_current_song', methods: ['PATCH'])]
+    public function updateCurrentSong(
+        string $roomId,
+        TokenValidator $tokenValidator,
+        Request $request,
+        DocumentManager $documentManager,
+        RoomAuthorization $roomAuthorization
+    ): Response {
+        $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
+
+        $form = $this->createForm(UpdateCurrentSongType::class);
+        $form->submit($request->request->all());
+
+        if (!$form->isValid()) {
+            throw new FormHttpException($form);
+        }
+
+        $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'guestName']);
+
+        /** @var Room|null $room */
+        $room = $documentManager->getRepository(Room::class)->findOneBy(['id' => str_replace('-', '', $roomId)]);
+        if (!$room) {
+            throw new NotFoundHttpException('The room does not exist');
+        }
+
+        if ($payload['roomId'] != $room->getId()) {
+            throw new AccessDeniedHttpException('JWT Token does not belong to this room');
+        }
+
+        if ($roomAuthorization->guestIsGranted(Guest::ROLE_GUEST, $payload['guestName'], $room->getGuests()->toArray())) {
+            throw new AccessDeniedHttpException("You don't have the permission to update the current song in this room");
+        }
+
+        if (!$room->getCurrentSong()) {
+            throw new NotFoundHttpException('There is no current song');
+        }
+
+        $room->getCurrentSong()->setIsPaused($request->request->get('isPaused'));
+
+        return $this->json($room->getCurrentSong());
     }
 }
