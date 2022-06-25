@@ -3,21 +3,23 @@
 namespace App\Form;
 
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\UrlType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\NotNull;
-use Symfony\Component\Validator\Constraints\Regex;
 
-class SongType extends AbstractType
+class UpdateCurrentSongType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('url', UrlType::class, [
+            ->add('isPaused', ChoiceType::class, [
+                'choices' => [
+                    true => true,
+                    false => false,
+                ],
                 'required' => true,
                 'constraints' => [
-                    new Regex("/^https:\/\/www.youtube.com\/watch?.*$/", 'This value is not a valid Youtube video URL.'),
                     new NotNull(),
                 ],
             ])
