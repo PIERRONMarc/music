@@ -142,4 +142,41 @@ class SongController extends AbstractController
 
         return $this->json($room->getCurrentSong());
     }
+
+    #[Route('/room/{roomId}/next-song', name: 'go_to_next_song', methods: 'GET')]
+    public function goToNextSong(
+        string $roomId,
+        DocumentManager $documentManager,
+        TokenValidator $tokenValidator,
+        Request $request,
+        RoomAuthorization $roomAuthorization
+    ): Response {
+        $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
+        $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'guestName']);
+
+        $room = $documentManager->getRepository(Room::class)->findOneBy(['id' => $roomId]);
+        if (!$room) {
+            throw new NotFoundHttpException('The room does not exist');
+        }
+
+        if ($payload['roomId'] != $room->getId()) {
+            throw new AccessDeniedHttpException('JWT Token does not belong to this room');
+        }
+
+        if ($roomAuthorization->guestIsGranted(Guest::ROLE_GUEST, $payload['guestName'], $room->getGuests()->toArray())) {
+            throw new AccessDeniedHttpException("You don't have the permission to go to the next song in this room");
+        }
+
+        if ($room->getSongs()->isEmpty()) {
+            throw new NotFoundHttpException('There is no song to go');
+        }
+
+        $room->setCurrentSong($room->getSongs()->first());
+        $room->removeSong($room->getSongs()->first());
+
+        $documentManager->persist($room);
+        $documentManager->flush();
+
+        return $this->json($room->getCurrentSong());
+    }
 }

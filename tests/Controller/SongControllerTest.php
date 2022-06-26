@@ -8,6 +8,7 @@ use Exception;
 use Generator;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class SongControllerTest extends RoomWebTestCase
 {
@@ -49,6 +50,54 @@ class SongControllerTest extends RoomWebTestCase
                 'isPaused' => true,
             ],
         ];
+        yield [
+            'httpMethod' => Request::METHOD_GET,
+            'route' => 'room/23456/next-song',
+        ];
+    }
+
+    /**
+     * @dataProvider provideRouteThatNeedARoom
+     *
+     * @param mixed[] $payload
+     */
+    public function testPerformActionOnNonExistentRoom(string $httpMethod, string $route, array $payload = []): void
+    {
+        $room = $this->createRoom();
+
+        $this->client->jsonRequest($httpMethod, $route, $payload, [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
+        ]);
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertSame('The room does not exist', $data['title']);
+        $this->assertSame(404, $data['status']);
+    }
+
+    private function provideRouteThatNeedARoom(): Generator
+    {
+        yield [
+            'httpMethod' => Request::METHOD_POST,
+            'route' => '/room/123456/song',
+            'payload' => [
+                'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            ],
+        ];
+        yield [
+            'httpMethod' => Request::METHOD_DELETE,
+            'route' => '/room/123456/song/123456',
+        ];
+        yield [
+            'httpMethod' => Request::METHOD_PATCH,
+            'route' => '/room/123456/current-song',
+            'payload' => [
+                'isPaused' => true,
+            ],
+        ];
+        yield [
+            'httpMethod' => Request::METHOD_GET,
+            'route' => 'room/123456/next-song',
+        ];
     }
 
     /**
@@ -86,6 +135,10 @@ class SongControllerTest extends RoomWebTestCase
             'payload' => [
                 'isPaused' => true,
             ],
+        ];
+        yield [
+            'httpMethod' => Request::METHOD_GET,
+            'route' => 'room/{roomId}/next-song',
         ];
     }
 
@@ -137,45 +190,10 @@ class SongControllerTest extends RoomWebTestCase
                 'isPaused' => true,
             ],
         ];
-    }
-
-    /**
-     * @dataProvider provideRouteThatNeedARoom
-     *
-     * @param mixed[] $payload
-     */
-    public function testPerformActionOnNonExistentRoom(string $httpMethod, string $route, array $payload = []): void
-    {
-        $room = $this->createRoom();
-
-        $this->client->jsonRequest($httpMethod, $route, $payload, [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
-        ]);
-
-        $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertSame('The room does not exist', $data['title']);
-        $this->assertSame(404, $data['status']);
-    }
-
-    private function provideRouteThatNeedARoom(): Generator
-    {
         yield [
-            'httpMethod' => Request::METHOD_POST,
-            'route' => '/room/123456/song',
-            'payload' => [
-                'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-            ],
-        ];
-        yield [
-            'httpMethod' => Request::METHOD_DELETE,
-            'route' => '/room/123456/song/123456',
-        ];
-        yield [
-            'httpMethod' => Request::METHOD_PATCH,
-            'route' => '/room/123456/current-song',
-            'payload' => [
-                'isPaused' => true,
-            ],
+            'httpMethod' => Request::METHOD_GET,
+            'route' => 'room/{roomId}/next-song',
+            'errorMessage' => "You don't have the permission to go to the next song in this room",
         ];
     }
 
@@ -312,6 +330,39 @@ class SongControllerTest extends RoomWebTestCase
             ],
             'violationMessage' => 'The selected choice is invalid.',
         ];
+    }
+
+    public function testGoToTheNextSong(): void
+    {
+        $room = $this->createRoom();
+        $this->addSong($room, true);
+        $nextSong = $this->addSong($room, false, [
+            'url' => 'https://www.youtube.com/watch?v=pAgnJDJN4VA&ab_channel=acdcVEVO',
+        ]);
+
+        $this->client->jsonRequest(Request::METHOD_GET, '/room/'.$room->getId().'/next-song', [], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
+        ]);
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertSame($nextSong->getUrl(), $data['url']);
+        $this->assertFalse($data['isPaused']);
+
+        // assert playlist is updated
+        $updatedRoom = $this->getDocumentManager()->getRepository(Room::class)->findOneBy(['id' => $room->getId()]);
+        $this->assertEmpty($updatedRoom->getSongs());
+    }
+
+    public function testGoToNextSongWhenNoMoreSongs(): void
+    {
+        $room = $this->createRoom();
+
+        $this->client->jsonRequest(Request::METHOD_GET, '/room/'.$room->getId().'/next-song', [], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
+        ]);
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+        $this->assertSame('There is no song to go', $data['title']);
     }
 
     /**

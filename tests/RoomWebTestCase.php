@@ -8,6 +8,7 @@ use App\Document\Song;
 use App\Service\Jwt\TokenFactory;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 abstract class RoomWebTestCase extends WebTestCase
 {
@@ -62,9 +63,20 @@ abstract class RoomWebTestCase extends WebTestCase
         return $guest;
     }
 
-    protected function addSong(Room $room, bool $isCurrentSong = false): Song
+    /**
+     * @param mixed[] $options
+     *
+     * @throws MongoDBException
+     */
+    protected function addSong(Room $room, bool $isCurrentSong = false, array $options = []): Song
     {
-        $song = (new Song())->setUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+        $resolver = new OptionsResolver();
+        $resolver->setDefaults([
+            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ]);
+        $options = $resolver->resolve($options);
+
+        $song = (new Song())->setUrl($options['url']);
         $room = $this->getDocumentManager()->getRepository(Room::class)->findOneBy(['id' => $room->getId()]);
 
         if ($isCurrentSong) {
