@@ -2,18 +2,13 @@
 
 namespace App\Tests\Controller;
 
-use App\Document\Room;
-use App\Document\Song;
-use App\Tests\DatabaseTrait;
-use Doctrine\ODM\MongoDB\MongoDBException;
+use App\Tests\RoomWebTestCase;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Request;
 
-class RoomControllerTest extends WebTestCase
+class RoomControllerTest extends RoomWebTestCase
 {
-    use DatabaseTrait;
-
     protected ?KernelBrowser $client = null;
 
     protected function setUp(): void
@@ -23,7 +18,7 @@ class RoomControllerTest extends WebTestCase
 
     public function testRoomCreation(): void
     {
-        $this->client->request('POST', '/room');
+        $this->client->request(Request::METHOD_POST, '/room');
         $data = json_decode($this->client->getResponse()->getContent(), true);
 
         $uuidPattern = "/^\{?[0-9a-f]{8}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{12}\}?$/i";
@@ -40,66 +35,37 @@ class RoomControllerTest extends WebTestCase
 
     public function testGettingAllRoom(): void
     {
-        $dm = $this->getDocumentManager();
-        $dm->persist((new Room())->setName('Red Rocks'));
-        $dm->flush();
+        $room = $this->createRoom();
 
-        $this->client->request('GET', '/room');
+        $this->client->request(Request::METHOD_GET, '/room');
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertSame('Red Rocks', $data[0]['name']);
+        $this->assertSame($room->getName(), $data[0]['name']);
     }
 
     public function testGettingAllRoomIsPaginated(): void
     {
-        $this->storeRooms(30);
-        $dm = $this->getDocumentManager();
-        $dm->persist((new Room())->setName('Madison Square Garden'));
-        $dm->flush();
+        $rooms = $this->storeRooms(31);
 
-        $this->client->request('GET', '/room?page=2');
+        $this->client->request(Request::METHOD_GET, '/room?page=2');
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertSame('Madison Square Garden', $data[0]['name']);
+        $this->assertSame($rooms[30]->getName(), $data[0]['name']);
     }
 
     public function testPageQueryParameterIsValidated(): void
     {
-        $this->client->request('GET', '/room?page=x');
+        $this->client->request(Request::METHOD_GET, '/room?page=x');
         $this->assertResponseIsSuccessful();
-    }
-
-    /**
-     * @return mixed[]
-     *
-     * @throws MongoDBException
-     */
-    private function storeRooms(int $numberOfRooms): array
-    {
-        $rooms = [];
-
-        $dm = $this->getDocumentManager();
-        for ($i = 0; $i < $numberOfRooms; ++$i) {
-            $room = (new Room())->setName((string) $i);
-            $dm->persist($room);
-            $rooms[] = $room;
-        }
-        $dm->flush();
-
-        return $rooms;
     }
 
     public function testJoinRoomAsAGuest(): void
     {
-        $room = (new Room())
-            ->setName('Madison Square Garden')
-            ->addSong((new Song())->setUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ'))
-        ;
-        $dm = $this->getDocumentManager();
-        $dm->persist($room);
-        $dm->flush();
+        $room = $this->createRoom();
+        $song = $this->addSong($room);
+        $currentSong = $this->addSong($room, true);
 
-        $this->client->request('GET', '/join/'.$room->getId());
+        $this->client->request(Request::METHOD_GET, '/join/'.$room->getId());
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
 
@@ -108,21 +74,17 @@ class RoomControllerTest extends WebTestCase
         $this->assertIsString($data['guest']['token']);
         $this->assertIsString($data['room']['id']);
         $this->assertIsString($data['room']['name']);
-        $this->assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $data['room']['songs'][0]['url']);
-        $this->assertSame($data['guest']['name'], $data['room']['guests'][0]['name'], 'Actual guest is not added to the guest list of the room');
+        $this->assertSame($song->getId(), $data['room']['songs'][0]['id']);
+        $this->assertSame($song->getUrl(), $data['room']['songs'][0]['url']);
+        $this->assertSame($currentSong->getUrl(), $data['room']['currentSong']['url']);
+        $this->assertSame($currentSong->getId(), $data['room']['currentSong']['id']);
+        $this->assertFalse($data['room']['currentSong']['isPaused']);
+        $this->assertSame($data['guest']['name'], $data['room']['guests'][1]['name'], 'Actual guest is not added to the guest list of the room');
     }
 
     public function testJoinARoomThatDoesntExist(): void
     {
-        $room = (new Room())
-            ->setName('Madison Square Garden')
-            ->addSong((new Song())->setUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ'))
-        ;
-        $dm = $this->getDocumentManager();
-        $dm->persist($room);
-        $dm->flush();
-
-        $this->client->jsonRequest('GET', '/join/15686e63b72b3b20aaecd3186ff2c42a');
+        $this->client->jsonRequest(Request::METHOD_GET, '/join/15686e63b72b3b20aaecd3186ff2c42a');
         $data = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertSame(404, $data['status']);

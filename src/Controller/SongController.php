@@ -51,7 +51,7 @@ class SongController extends AbstractController
             throw new AccessDeniedHttpException('JWT Token does not belong to this room');
         }
 
-        if ($roomAuthorization->guestIsGranted(Guest::ROLE_GUEST, $payload['guestName'], $room->getGuests()->toArray())) {
+        if (!$roomAuthorization->guestIsGranted(Guest::ROLE_ADMIN, $payload['guestName'], $room->getGuests()->toArray())) {
             throw new AccessDeniedHttpException("You don't have the permission to add song to this room");
         }
 
@@ -91,7 +91,7 @@ class SongController extends AbstractController
         }
 
         if ($roomAuthorization->guestIsGranted(Guest::ROLE_GUEST, $payload['guestName'], $room->getGuests()->toArray())) {
-            throw new AccessDeniedHttpException("You don't have the permission to add song to this room");
+            throw new AccessDeniedHttpException("You don't have the permission to delete song in this room");
         }
 
         /** @var RoomRepository $roomRepository */
