@@ -5,13 +5,20 @@ namespace App\Controller;
 use App\Document\Guest;
 use App\Document\Room;
 use App\DTO\JoinRoomDTO;
+use App\Exception\FormHttpException;
+use App\Form\HandleGuestRoleType;
 use App\Service\Jwt\TokenFactory;
+use App\Service\Jwt\TokenValidator;
 use App\Service\RandomNameGenerator\GuestName\RandomGuestNameGenerator;
 use App\Service\RandomNameGenerator\RoomName\RandomRoomNameGenerator;
+use App\Service\Room\RoomAuthorization;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -90,5 +97,57 @@ class RoomController extends AbstractController
             ->setGuest($guest)
             ->setRoom($room)
         );
+    }
+
+    #[Route('/room/{roomId}/grant-role/{guestName}', name: 'grant_role_on_guest', methods: ['PATCH'])]
+    public function grantRoleOnGuest(
+        string $roomId,
+        string $guestName,
+        DocumentManager $documentManager,
+        Request $request,
+        TokenValidator $tokenValidator,
+        RoomAuthorization $roomAuthorization
+    ): Response {
+        $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
+
+        $form = $this->createForm(HandleGuestRoleType::class);
+        $form->submit($request->request->all());
+
+        if (!$form->isValid()) {
+            throw new FormHttpException($form);
+        }
+
+        $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'guestName']);
+
+        $room = $documentManager->getRepository(Room::class)->findOneBy(['id' => $roomId]);
+        if (!$room) {
+            throw new NotFoundHttpException('The room does not exist');
+        }
+
+        if ($payload['roomId'] != $room->getId()) {
+            throw new AccessDeniedHttpException('JWT Token does not belong to this room');
+        }
+
+        if ($payload['guestName'] !== $room->getHost()->getName()) {
+            throw new AccessDeniedHttpException("You don't have the permission to grant roles in this room");
+        }
+
+        if ($guestName === $room->getHost()->getName()) {
+            throw new BadRequestHttpException("You can't update the role of the host");
+        }
+
+        $guestIsDisconnected = true;
+        foreach ($room->getGuests() as $guest) {
+            if ($guest->getName() == $guestName) {
+                $guest->setRole($request->request->get('role'));
+                $guestIsDisconnected = false;
+            }
+        }
+
+        if ($guestIsDisconnected) {
+            throw new NotFoundHttpException('Guest is not found');
+        }
+
+        return new JsonResponse([], Response::HTTP_NO_CONTENT);
     }
 }

@@ -2,10 +2,14 @@
 
 namespace App\Tests\Controller;
 
+use App\Document\Guest;
+use App\Document\Room;
 use App\Tests\RoomWebTestCase;
 use Exception;
+use Generator;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class RoomControllerTest extends RoomWebTestCase
 {
@@ -89,6 +93,125 @@ class RoomControllerTest extends RoomWebTestCase
 
         $this->assertSame(404, $data['status']);
         $this->assertSame('The room 15686e63b72b3b20aaecd3186ff2c42a does not exist.', $data['title']);
+    }
+
+    public function testGrantRoleOnGuest(): void
+    {
+        $room = $this->createRoom();
+        $guest = $this->joinRoom($room);
+
+        $this->client->jsonRequest(Request::METHOD_PATCH, '/room/'.$room->getId().'/grant-role/'.$guest->getName(), [
+            'role' => Guest::ROLE_ADMIN,
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
+        ]);
+        $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+
+        $updatedRoom = $this->getDocumentManager()->getRepository(Room::class)->findOneBy(['id' => $room->getId()]);
+        foreach ($updatedRoom->getGuests() as $updatedGuest) {
+            if ($updatedGuest->getName() == $guest->getName()) {
+                $this->assertSame(Guest::ROLE_ADMIN, $updatedGuest->getRole());
+            }
+        }
+    }
+
+    public function testCannotUpdateHostRole(): void
+    {
+        $room = $this->createRoom();
+
+        $this->client->jsonRequest(Request::METHOD_PATCH, '/room/'.$room->getId().'/grant-role/'.$room->getHost()->getName(), [
+            'role' => Guest::ROLE_GUEST,
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
+        ]);
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
+        $this->assertSame("You can't update the role of the host", $data['title']);
+
+        $updatedRoom = $this->getDocumentManager()->getRepository(Room::class)->findOneBy(['id' => $room->getId()]);
+        foreach ($updatedRoom->getGuests() as $updatedGuest) {
+            if ($updatedGuest->getName() == $room->getHost()->getName()) {
+                $this->assertNotSame(Guest::ROLE_GUEST, $updatedGuest->getRole());
+            }
+        }
+    }
+
+    /**
+     * @dataProvider provideWrongPayloadToGrantRoleOnGuest
+     *
+     * @param mixed[] $payload
+     */
+    public function testGrantAnInexistantRole(array $payload, string $violationMessage): void
+    {
+        $room = $this->createRoom();
+        $guest = $this->joinRoom($room);
+
+        $this->client->jsonRequest(Request::METHOD_PATCH, '/room/'.$room->getId().'/grant-role/'.$guest->getName(), $payload, [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
+        ]);
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
+        $this->assertSame('role', $data['violations'][0]['property']);
+        $this->assertSame($violationMessage, $data['violations'][0]['message']);
+    }
+
+    private function provideWrongPayloadToGrantRoleOnGuest(): Generator
+    {
+        yield [
+            'payload' => [
+                'role' => 'NOT_A_ROLE',
+            ],
+            'violationMessage' => 'Not a valid role',
+        ];
+        yield [
+            'payload' => [],
+            'violationMessage' => 'This value should not be null.',
+        ];
+    }
+
+    /**
+     * @dataProvider provideRouteThatNeedARoom
+     *
+     * @param mixed[] $payload
+     */
+    public function testPerformActionOnNonExistentResource(
+        string $httpMethod,
+        string $route,
+        string $errorMessage,
+        array $payload = []
+    ): void {
+        $room = $this->createRoom();
+
+        $route = str_replace('{roomId}', $room->getId(), $route);
+        $this->client->jsonRequest($httpMethod, $route, $payload, [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
+        ]);
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertSame($errorMessage, $data['title']);
+        $this->assertSame(404, $data['status']);
+    }
+
+    private function provideRouteThatNeedARoom(): Generator
+    {
+        yield [
+            'httpMethod' => Request::METHOD_PATCH,
+            'route' => '/room/123456/grant-role/Angry%20ape',
+            'errorMessage' => 'The room does not exist',
+            'payload' => [
+                'role' => Guest::ROLE_ADMIN,
+            ],
+        ];
+        yield [
+            'httpMethod' => Request::METHOD_PATCH,
+            'route' => '/room/{roomId}/grant-role/azert',
+            'errorMessage' => 'Guest is not found',
+            'payload' => [
+                'role' => Guest::ROLE_ADMIN,
+            ],
+        ];
     }
 
     /**
