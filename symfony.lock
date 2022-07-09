@@ -206,6 +206,9 @@
     "psr/event-dispatcher": {
         "version": "1.0.0"
     },
+    "psr/link": {
+        "version": "2.0.1"
+    },
     "psr/log": {
         "version": "3.0.0"
     },
@@ -363,11 +366,32 @@
             "src/Kernel.php"
         ]
     },
+    "symfony/http-client": {
+        "version": "v6.0.9"
+    },
+    "symfony/http-client-contracts": {
+        "version": "v3.1.1"
+    },
     "symfony/http-foundation": {
         "version": "v6.0.7"
     },
     "symfony/http-kernel": {
         "version": "v6.0.7"
+    },
+    "symfony/mercure": {
+        "version": "v0.6.1"
+    },
+    "symfony/mercure-bundle": {
+        "version": "0.3",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "0.3",
+            "ref": "e0a854b5439186e04b28fb8887b42c54f24a0d32"
+        },
+        "files": [
+            "config/packages/mercure.yaml"
+        ]
     },
     "symfony/options-resolver": {
         "version": "v6.0.3"
@@ -459,6 +483,9 @@
     },
     "symfony/var-exporter": {
         "version": "v6.0.7"
+    },
+    "symfony/web-link": {
+        "version": "v6.0.3"
     },
     "symfony/yaml": {
         "version": "v6.0.3"

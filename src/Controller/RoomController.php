@@ -7,11 +7,12 @@ use App\Document\Room;
 use App\DTO\JoinRoomDTO;
 use App\Exception\FormHttpException;
 use App\Form\HandleGuestRoleType;
+use App\Mercure\Message\GuestJoinMessage;
+use App\Mercure\Message\UpdateGuestMessage;
 use App\Service\Jwt\TokenFactory;
 use App\Service\Jwt\TokenValidator;
 use App\Service\RandomNameGenerator\GuestName\RandomGuestNameGenerator;
 use App\Service\RandomNameGenerator\RoomName\RandomRoomNameGenerator;
-use App\Service\Room\RoomAuthorization;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,6 +21,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 class RoomController extends AbstractController
@@ -71,7 +73,8 @@ class RoomController extends AbstractController
         string $id,
         DocumentManager $dm,
         RandomGuestNameGenerator $randomGuestNameGenerator,
-        TokenFactory $tokenFactory
+        TokenFactory $tokenFactory,
+        HubInterface $hub
     ): Response {
         $room = $dm->getRepository(Room::class)->findOneBy(['id' => str_replace('-', '', $id)]);
 
@@ -93,6 +96,13 @@ class RoomController extends AbstractController
         $room->addGuest($guest);
         $dm->flush();
 
+        $message = new GuestJoinMessage(
+            $room->getId(),
+            $guest->getName(),
+            $guest->getRole()
+        );
+        $hub->publish($message->buildUpdate());
+
         return $this->json((new JoinRoomDTO())
             ->setGuest($guest)
             ->setRoom($room)
@@ -106,7 +116,7 @@ class RoomController extends AbstractController
         DocumentManager $documentManager,
         Request $request,
         TokenValidator $tokenValidator,
-        RoomAuthorization $roomAuthorization
+        HubInterface $hub
     ): Response {
         $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
 
@@ -117,6 +127,7 @@ class RoomController extends AbstractController
             throw new FormHttpException($form);
         }
 
+        $role = $request->request->get('role');
         $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'guestName']);
 
         $room = $documentManager->getRepository(Room::class)->findOneBy(['id' => $roomId]);
@@ -139,7 +150,7 @@ class RoomController extends AbstractController
         $guestIsDisconnected = true;
         foreach ($room->getGuests() as $guest) {
             if ($guest->getName() == $guestName) {
-                $guest->setRole($request->request->get('role'));
+                $guest->setRole($role);
                 $guestIsDisconnected = false;
             }
         }
@@ -147,6 +158,13 @@ class RoomController extends AbstractController
         if ($guestIsDisconnected) {
             throw new NotFoundHttpException('Guest is not found');
         }
+
+        $message = new UpdateGuestMessage(
+            $room->getId(),
+            $guestName,
+            $role
+        );
+        $hub->publish($message->buildUpdate());
 
         return new JsonResponse([], Response::HTTP_NO_CONTENT);
     }

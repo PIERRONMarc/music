@@ -8,6 +8,9 @@ use App\Document\Song;
 use App\Exception\FormHttpException;
 use App\Form\SongType;
 use App\Form\UpdateCurrentSongType;
+use App\Mercure\Message\AddSongMessage;
+use App\Mercure\Message\DeleteSongMessage;
+use App\Mercure\Message\UpdateCurrentSongMessage;
 use App\Repository\RoomRepository;
 use App\Service\Jwt\TokenValidator;
 use App\Service\Room\RoomAuthorization;
@@ -18,6 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 class SongController extends AbstractController
@@ -28,7 +32,8 @@ class SongController extends AbstractController
         DocumentManager $dm,
         Request $request,
         TokenValidator $tokenValidator,
-        RoomAuthorization $roomAuthorization
+        RoomAuthorization $roomAuthorization,
+        HubInterface $hub
     ): Response {
         $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
 
@@ -64,6 +69,13 @@ class SongController extends AbstractController
 
         $dm->flush();
 
+        $message = new AddSongMessage(
+            $room->getId(),
+            $song->getId(),
+            $song->getUrl()
+        );
+        $hub->publish($message->buildUpdate());
+
         return $this->json($song, Response::HTTP_CREATED);
     }
 
@@ -74,7 +86,8 @@ class SongController extends AbstractController
         string $songId,
         TokenValidator $tokenValidator,
         Request $request,
-        RoomAuthorization $roomAuthorization
+        RoomAuthorization $roomAuthorization,
+        HubInterface $hub
     ): Response {
         $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
 
@@ -98,6 +111,12 @@ class SongController extends AbstractController
         $roomRepository = $documentManager->getRepository(Room::class);
         $roomRepository->deleteSong($roomId, $songId);
 
+        $message = new DeleteSongMessage(
+            $room->getId(),
+            $songId
+        );
+        $hub->publish($message->buildUpdate());
+
         return new JsonResponse([], Response::HTTP_NO_CONTENT);
     }
 
@@ -107,7 +126,8 @@ class SongController extends AbstractController
         TokenValidator $tokenValidator,
         Request $request,
         DocumentManager $documentManager,
-        RoomAuthorization $roomAuthorization
+        RoomAuthorization $roomAuthorization,
+        HubInterface $hub,
     ): Response {
         $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
 
@@ -140,6 +160,14 @@ class SongController extends AbstractController
 
         $room->getCurrentSong()->setIsPaused($request->request->get('isPaused'));
 
+        $message = new UpdateCurrentSongMessage(
+            $room->getId(),
+            $room->getCurrentSong()->getUrl(),
+            $room->getCurrentSong()->getIsPaused()
+        );
+
+        $hub->publish($message->buildUpdate());
+
         return $this->json($room->getCurrentSong());
     }
 
@@ -149,7 +177,8 @@ class SongController extends AbstractController
         DocumentManager $documentManager,
         TokenValidator $tokenValidator,
         Request $request,
-        RoomAuthorization $roomAuthorization
+        RoomAuthorization $roomAuthorization,
+        HubInterface $hub
     ): Response {
         $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
         $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'guestName']);
@@ -176,6 +205,14 @@ class SongController extends AbstractController
 
         $documentManager->persist($room);
         $documentManager->flush();
+
+        $message = new UpdateCurrentSongMessage(
+            $room->getId(),
+            $room->getCurrentSong()->getUrl(),
+            $room->getCurrentSong()->getIsPaused()
+        );
+
+        $hub->publish($message->buildUpdate());
 
         return $this->json($room->getCurrentSong());
     }

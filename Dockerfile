@@ -94,8 +94,6 @@ ENV STABILITY ${STABILITY}
 ARG SYMFONY_VERSION=""
 ENV SYMFONY_VERSION ${SYMFONY_VERSION}
 
-# mongodb url template required for symfony to not crash when clearing cache after first packages installation
-ENV MONGODB_URL="mongodb://user:password@server:27017"
 
 # Download the Symfony skeleton and leverage Docker cache layers
 RUN composer create-project "${SKELETON} ${SYMFONY_VERSION}" . --stability=$STABILITY --prefer-dist --no-dev --no-progress --no-interaction; \
@@ -108,6 +106,8 @@ COPY . .
 
 RUN set -eux; \
 	mkdir -p var/cache var/log; \
+	# mongodb url template required for symfony to not crash when clearing cache after first packages installation
+    export MONGODB_URL="mongodb://user:password@server:27017"; \
 	composer install --prefer-dist --no-dev --no-progress --no-scripts --no-interaction; \
 	composer dump-autoload --classmap-authoritative --no-dev; \
 	composer symfony:dump-env dev; \
