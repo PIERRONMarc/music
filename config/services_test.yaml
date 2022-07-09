@@ -4,4 +4,4 @@ parameters:
     
 services:
     mercure.hub.default:
-        class: App\Tests\Stub\HubStub
+        class: App\Tests\Functional\Stub\HubStub
