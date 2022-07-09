@@ -1,0 +1,117 @@
+# Events dispatched through mercure
+# consult now with https://studio.asyncapi.com/
+
+asyncapi: 2.4.0
+info:
+    title: Music'all
+    version: 0.1.0
+channels:
+    /room/id:
+        subscribe:
+            message:
+                oneOf:
+                    - $ref: '#/components/messages/updateCurrentSong'
+                    - $ref: '#/components/messages/guestJoin'
+                    - $ref: '#/components/messages/guestLeave'
+                    - $ref: '#/components/messages/updateGuest'
+                    - $ref: '#/components/messages/deleteSong'
+                    - $ref: '#/components/messages/addSong'
+
+components:
+    messages:
+        updateCurrentSong:
+            payload:
+                type: object
+                properties:
+                    action:
+                        type: string
+                        description: Action performed
+                        example: updateCurrentSong
+                    payload:
+                        type: object
+                        properties:
+                            url:
+                                type: string
+                                example: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+                            isPaused:
+                                type: boolean
+                                example: false
+        guestJoin:
+            payload:
+                type: object
+                properties:
+                    action:
+                        type: string
+                        description: Action performed
+                        example: userJoin
+                    payload:
+                        type: object
+                        properties:
+                            name:
+                                type: string
+                                example: Happy ape
+                            role:
+                                type: string
+                                example: GUEST
+        guestLeave:
+            payload:
+                type: object
+                properties:
+                    action:
+                        type: string
+                        description: Action performed
+                        example: userLeave
+                    payload:
+                        type: object
+                        properties:
+                            name:
+                                type: string
+                                example: Happy ape
+        updateGuest:
+            payload:
+                type: object
+                properties:
+                    action:
+                        type: string
+                        description: Action performed
+                        example: updateUser
+                    payload:
+                        type: object
+                        properties:
+                            name:
+                                type: string
+                                example: Happy ape
+                            role:
+                                type: string
+                                example: GUEST
+        deleteSong:
+            payload:
+                type: object
+                properties:
+                    action:
+                        type: string
+                        description: Action performed
+                        example: deleteSong
+                    payload:
+                        type: object
+                        properties:
+                            songId:
+                                type: string
+                                example: 62b0b0f6f78346d0450a3304
+        addSong:
+            payload:
+                type: object
+                properties:
+                    action:
+                        type: string
+                        description: Action performed
+                        example: deleteSong
+                    payload:
+                        type: object
+                        properties:
+                            songId:
+                                type: string
+                                example: 62b0b0f6f78346d0450a3304
+                            url:
+                                type: string
+                                example: https://www.youtube.com/watch?v=dQw4w9WgXcQ
