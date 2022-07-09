@@ -17,6 +17,10 @@ services:
     volumes:
       - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./public:/srv/app/public:ro
+    environment:
+      MERCURE_EXTRA_DIRECTIVES: |
+        cors_origins *
+        anonymous
 
 ###> symfony/mercure-bundle ###
 ###< symfony/mercure-bundle ###
