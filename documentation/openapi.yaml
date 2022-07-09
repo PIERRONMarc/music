@@ -1,0 +1,435 @@
+# consult now with https://editor.swagger.io/
+
+openapi: 3.0.0
+info:
+    version: "0.1.0"
+    title: Music'all
+    contact:
+        email: pierronmarc@outlook.fr
+servers:
+    # Added by API Auto Mocking Plugin
+    - description: SwaggerHub API Auto Mocking
+      url: https://virtserver.swaggerhub.com/PIERRONMarc/music/0.1.0
+tags:
+    - name: room
+      description: A room in which you can listen music with a group of people
+paths:
+    /room:
+        post:
+            tags:
+                - room
+            summary: Create a room
+            operationId: createRoom
+            responses:
+                '201':
+                    description: Created
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Room'
+        get:
+            tags:
+                - room
+            summary: Find all rooms
+            operationId: findAllRooms
+            responses:
+                '200':
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        id:
+                                            type: string
+                                        name:
+                                            type: string
+    /join/{id}:
+        get:
+            tags:
+                - room
+            summary: Join a room
+            operationId: join
+            parameters:
+                - name: id
+                  in: path
+                  description: Id of the room to join
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Room'
+                '404':
+                    description: Room not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+    /room/{id}/song:
+        post:
+            tags:
+                - room
+            summary: Add a song to the playlist
+            operationId: addSong
+            parameters:
+                - name: id
+                  in: path
+                  description: Id of the room
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '201':
+                    description: Successful operation
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Song'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+                '403':
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+                '400':
+                    description: Validation failed
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpFormException'
+                '404':
+                    description: Room not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+            requestBody:
+                $ref: '#/components/requestBodies/Song'
+            security:
+                - roomAuth: []
+    /room/{roomId}/current-song:
+        patch:
+            tags:
+                - room
+            summary: Update the state of the current song
+            operationId: UpdateStateCurrentSong
+            parameters:
+                - name: roomId
+                  in: path
+                  description: Id of the room
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                isPaused:
+                                    type: boolean
+                            required:
+                                - isPaused
+            responses:
+                '200':
+                    description: State updated
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CurrentSong'
+                '400':
+                    description: Wrong payload
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+                '403':
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+                '404':
+                    description: Room not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+            security:
+                - roomAuth: []
+    
+    /room/{roomId}/next-song:
+        get:
+            tags:
+                - room
+            summary: Tell the room to go to the next song
+            operationId: nextSong
+            parameters:
+                - name: roomId
+                  in: path
+                  description: Id of the room
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: Succesfully gone to the next song
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CurrentSong'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+                '403':
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+                '404':
+                    description: Room not found || There is no song to go
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+            security:
+                - roomAuth: []
+    /room/{roomId}/grant-role/{guestName}:
+        patch:
+            tags:
+                - room
+            summary: Grant a role to a guest
+            operationId: grantRole
+            parameters:
+                - name: roomId
+                  in: path
+                  description: Id of the room
+                  required: true
+                  schema:
+                      type: string
+                - name: guestName
+                  in: path
+                  description: Name of the guest
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                role:
+                                    type: string
+                                    example: ADMIN
+            responses:
+                '204':
+                    description: Role granted
+                '400':
+                    description: Wrong payload
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+                '403':
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+                '404':
+                    description: Room not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+            security:
+                - roomAuth: []
+    /room/{roomId}/song/{songId}:
+        delete:
+            tags:
+                - room
+            summary: Delete a song from the playlist
+            operationId: removeSong
+            parameters:
+                - name: roomId
+                  in: path
+                  description: Id of the room
+                  required: true
+                  schema:
+                      type: string
+                - name: songId
+                  in: path
+                  description: Id of the song
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '204':
+                    description: Delete successful
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+                '404':
+                    description: Room not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HttpException'
+            security:
+                - roomAuth: []
+components:
+    securitySchemes:
+        roomAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+    schemas:
+        Room:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                host:
+                    $ref: '#/components/schemas/Guest'
+                songs:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Song'
+                guests:
+                    type: array
+                    description: Active guests in the room
+                    items:
+                        $ref: '#/components/schemas/Guest'
+                currentSong:
+                    $ref: '#/components/schemas/CurrentSong'
+            required:
+                - id
+                - name
+                - host
+                - songs
+                - guests
+                - currentSong
+        Song:
+            type: object
+            properties:
+                id:
+                    type: string
+                url:
+                    type: string
+                    description: A Youtube URL with correct scheme
+                    example: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+            required:
+                - id
+                - url
+        CurrentSong:
+            type: object
+            properties:
+                url:
+                    type: string
+                    description: A Youtube URL with correct scheme
+                    example: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+                isPaused:
+                    type: boolean
+            required:
+                - url
+                - isPaused
+        Guest:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                role:
+                    type: string
+                token:
+                    type: string
+                    description: Token is not visible when the Guest object is someone else
+            required:
+                - id
+                - name
+                - role
+        HttpFormException:
+            type: object
+            properties:
+                type:
+                    type: string
+                title:
+                    type: string
+                status:
+                    type: integer
+                violations:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            property:
+                                type: string
+                            message:
+                                type: string
+            required:
+                - type
+                - title
+                - status
+                - violations
+        HttpException:
+            type: object
+            properties:
+                type:
+                    type: string
+                title:
+                    type: string
+                status:
+                    type: integer
+            required:
+                - type
+                - title
+                - status
+    requestBodies:
+        Song:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            url:
+                                type: string
+                                description: A Youtube URL with correct scheme
+                                example: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+                        required:
+                            - url
