@@ -7,6 +7,7 @@ use App\Document\Room;
 use App\DTO\JoinRoomDTO;
 use App\Exception\FormHttpException;
 use App\Form\HandleGuestRoleType;
+use App\Mercure\Message\AddRoomMessage;
 use App\Mercure\Message\GuestJoinMessage;
 use App\Mercure\Message\UpdateGuestMessage;
 use App\Service\Jwt\TokenFactory;
@@ -27,11 +28,12 @@ use Symfony\Component\Routing\Annotation\Route;
 class RoomController extends AbstractController
 {
     #[Route('/room', name: 'create_room', methods: ['POST'])]
-    public function index(
+    public function create(
         DocumentManager $manager,
         RandomRoomNameGenerator $randomRoomNameGenerator,
         RandomGuestNameGenerator $randomGuestNameGenerator,
-        TokenFactory $tokenFactory
+        TokenFactory $tokenFactory,
+        HubInterface $hub
     ): Response {
         $guestName = $randomGuestNameGenerator->getName();
         $host = (new Guest())
@@ -55,11 +57,17 @@ class RoomController extends AbstractController
         ])->toString());
         $room->setHost($host);
 
+        $message = new AddRoomMessage(
+            $room->getId(),
+            $room->getName(),
+        );
+        $hub->publish($message->buildUpdate());
+
         return $this->json($room, Response::HTTP_CREATED);
     }
 
     #[Route('/room', name: 'get_all_room', methods: ['GET'])]
-    public function getAllRooms(DocumentManager $dm, Request $request): Response
+    public function getAll(DocumentManager $dm, Request $request): Response
     {
         $page = 0 === $request->query->getInt('page', 1) ? 1 : $request->query->getInt('page', 1);
         $offset = ($page - 1) * 30;
@@ -69,7 +77,7 @@ class RoomController extends AbstractController
     }
 
     #[Route('/join/{id}', name: 'join_room', methods: ['GET'])]
-    public function joinRoom(
+    public function join(
         string $id,
         DocumentManager $dm,
         RandomGuestNameGenerator $randomGuestNameGenerator,
