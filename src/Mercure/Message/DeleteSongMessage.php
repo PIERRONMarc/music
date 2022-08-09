@@ -13,7 +13,7 @@ class DeleteSongMessage extends AbstractRoomActionMessage
      */
     public function __construct(string $roomId, string $songId)
     {
-        parent::__construct($roomId, 'deleteSong', [
+        parent::__construct($roomId, 'DELETE_SONG', [
             'songId' => $songId,
         ]);
     }

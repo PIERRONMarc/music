@@ -14,7 +14,7 @@ class AddSongMessage extends AbstractRoomActionMessage
      */
     public function __construct(string $roomId, string $songId, string $url)
     {
-        parent::__construct($roomId, 'addSong', [
+        parent::__construct($roomId, 'ADD_SONG', [
             'songId' => $songId,
             'url' => $url,
         ]);

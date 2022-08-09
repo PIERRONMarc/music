@@ -14,7 +14,7 @@ class AddRoomMessage extends AbstractMessage
     public function __construct(string $id, string $name)
     {
         parent::__construct(['/room'], [
-            'action' => 'addRoom',
+            'action' => 'ADD_ROOM',
             'payload' => [
                 'id' => $id,
                 'name' => $name,

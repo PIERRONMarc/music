@@ -14,7 +14,7 @@ class UpdateGuestMessage extends AbstractRoomActionMessage
      */
     public function __construct(string $roomId, string $name, string $role)
     {
-        parent::__construct($roomId, 'updateGuest', [
+        parent::__construct($roomId, 'UPDATE_GUEST', [
             'name' => $name,
             'role' => $role,
         ]);
