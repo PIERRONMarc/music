@@ -1,0 +1,10 @@
+services:
+    Google\Client:
+        class: Google\Client
+        calls:
+            - [setDeveloperKey, ['%env(GOOGLE_API_KEY)%']]
+
+    Google\Service\YouTube:
+        class: Google\Service\YouTube
+        arguments:
+            - '@Google\Client'
