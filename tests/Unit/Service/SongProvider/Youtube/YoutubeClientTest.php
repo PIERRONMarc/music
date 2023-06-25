@@ -39,7 +39,7 @@ class YoutubeClientTest extends TestCase
     /**
      * @dataProvider provideSongDTO
      */
-    public function testGetSong(SongDTO $expectedSong): void
+    public function testWhenGetSongThenSongIsReturned(SongDTO $expectedSong): void
     {
         $youtubeService = $this->createMock(YouTube::class);
         $snippet = new VideoSnippet();
@@ -65,7 +65,7 @@ class YoutubeClientTest extends TestCase
         $this->assertEquals($song, $expectedSong);
     }
 
-    public function testGetSongNotFound(): void
+    public function testWhenGetUnexistingSongThenSongNotFoundExceptionIsThrowed(): void
     {
         $youtubeService = $this->createMock(YouTube::class);
         $expectedVideoResponse = $this->createMock(VideoListResponse::class);
