@@ -3,6 +3,7 @@
 namespace App\Tests\Unit\Service\SongProvider\Youtube;
 
 use App\DTO\SongDTO;
+use App\Service\SongProvider\Exception\SongNotFoundException;
 use App\Service\SongProvider\Youtube\YoutubeClient;
 use Generator;
 use Google\Service\YouTube;
@@ -39,7 +40,7 @@ class YoutubeClientTest extends TestCase
     /**
      * @dataProvider provideSongDTO
      */
-    public function testGetVideoInfo(SongDTO $expectedSong): void
+    public function testGetSong(SongDTO $expectedSong): void
     {
         $youtubeService = $this->createMock(YouTube::class);
         $snippet = new VideoSnippet();
@@ -63,5 +64,24 @@ class YoutubeClientTest extends TestCase
         $song = $youtubeClient->getSong($expectedSong->id);
 
         $this->assertEquals($song, $expectedSong);
+    }
+
+    public function testGetSongNotFound(): void
+    {
+        $youtubeService = $this->createMock(YouTube::class);
+        $expectedVideoResponse = $this->createMock(VideoListResponse::class);
+        $expectedVideoResponse
+            ->method('getItems')
+            ->willReturn([]);
+        $youtubeService->videos = $this->createMock(Videos::class);
+        $youtubeService->videos
+            ->method('listVideos')
+            ->willReturn($expectedVideoResponse);
+        $youtubeClient = new YoutubeClient($youtubeService);
+
+        $this->expectException(SongNotFoundException::class);
+
+
+        $youtubeClient->getSong('some_id');
     }
 }

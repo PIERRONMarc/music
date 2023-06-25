@@ -3,6 +3,7 @@
 namespace App\Service\SongProvider\Youtube;
 
 use App\DTO\SongDTO;
+use App\Service\SongProvider\Exception\SongNotFoundException;
 use App\Service\SongProvider\SongProviderInterface;
 use DateInterval;
 use Exception;
@@ -30,6 +31,11 @@ class YoutubeClient implements SongProviderInterface
                 'maxResults' => 1,
             ]
         );
+
+        if (!isset($videoListResponse->getItems()[0])) {
+            throw new SongNotFoundException();
+        }
+
         $video = $videoListResponse->getItems()[0];
 
         $duration = $video->getContentDetails()->getDuration();
