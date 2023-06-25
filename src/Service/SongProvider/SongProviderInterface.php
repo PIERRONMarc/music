@@ -7,9 +7,7 @@ use App\DTO\SongDTO;
 interface SongProviderInterface
 {
     /**
-     * Get a song based on the resource passed as an argument
-     *
-     * @param $resource
+     * Get a song based on the resource passed as an argument.
      */
-    public function getSong($resource): SongDTO;
+    public function getSong(mixed $resource): SongDTO;
 }

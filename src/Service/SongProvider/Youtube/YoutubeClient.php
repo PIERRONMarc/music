@@ -12,17 +12,16 @@ use Google\Service\YouTube;
 class YoutubeClient implements SongProviderInterface
 {
     public function __construct(
-       private  YouTube $youtubeService
-    ) {}
+       private YouTube $youtubeService
+    ) {
+    }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      *
-     * @param $resource
-     * @return SongDTO
      * @throws Exception
      */
-    public function getSong($resource): SongDTO
+    public function getSong(mixed $resource): SongDTO
     {
         $videoListResponse = $this->youtubeService->videos->listVideos(
             'snippet,contentDetails',

@@ -21,20 +21,19 @@ class YoutubeClientTest extends TestCase
         yield [
             'expectedSong' => new SongDTO(
                 '1',
-                '1',
+                1,
                 'title',
                 'author'
-            )
+            ),
         ];
         yield [
             'expectedSong' => new SongDTO(
             '2',
-            '2',
+            1,
             'anotherTitle',
             'anotherAuthor'
-            )
+            ),
         ];
-
     }
 
     /**
@@ -80,7 +79,6 @@ class YoutubeClientTest extends TestCase
         $youtubeClient = new YoutubeClient($youtubeService);
 
         $this->expectException(SongNotFoundException::class);
-
 
         $youtubeClient->getSong('some_id');
     }
