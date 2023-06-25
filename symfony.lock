@@ -81,6 +81,9 @@
     "doctrine/persistence": {
         "version": "2.5.1"
     },
+    "firebase/php-jwt": {
+        "version": "v6.7.0"
+    },
     "friendsofphp/php-cs-fixer": {
         "version": "3.8",
         "recipe": {
@@ -98,6 +101,33 @@
     },
     "gitonomy/gitlib": {
         "version": "v1.3.4"
+    },
+    "google/apiclient": {
+        "version": "2.14",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "2.10",
+            "ref": "07a97ec434d43b7903c78069a04c92adb6442e52"
+        },
+        "files": [
+            "config/packages/google_apiclient.yaml"
+        ]
+    },
+    "google/apiclient-services": {
+        "version": "v0.304.0"
+    },
+    "google/auth": {
+        "version": "v1.28.0"
+    },
+    "guzzlehttp/guzzle": {
+        "version": "7.7.0"
+    },
+    "guzzlehttp/promises": {
+        "version": "2.0.0"
+    },
+    "guzzlehttp/psr7": {
+        "version": "2.5.0"
     },
     "jean85/pretty-package-versions": {
         "version": "2.0.5"
@@ -129,6 +159,12 @@
     "ondram/ci-detector": {
         "version": "4.1.0"
     },
+    "paragonie/constant_time_encoding": {
+        "version": "v2.6.3"
+    },
+    "paragonie/random_compat": {
+        "version": "v9.99.100"
+    },
     "phar-io/manifest": {
         "version": "2.0.3"
     },
@@ -149,6 +185,9 @@
     },
     "phpro/grumphp": {
         "version": "v1.10.0"
+    },
+    "phpseclib/phpseclib": {
+        "version": "3.0.20"
     },
     "phpspec/prophecy": {
         "version": "v1.15.0"
@@ -206,11 +245,23 @@
     "psr/event-dispatcher": {
         "version": "1.0.0"
     },
+    "psr/http-client": {
+        "version": "1.0.2"
+    },
+    "psr/http-factory": {
+        "version": "1.0.2"
+    },
+    "psr/http-message": {
+        "version": "2.0"
+    },
     "psr/link": {
         "version": "2.0.1"
     },
     "psr/log": {
         "version": "3.0.0"
+    },
+    "ralouphie/getallheaders": {
+        "version": "3.0.3"
     },
     "ramsey/collection": {
         "version": "1.2.2"
