@@ -80,6 +80,24 @@ class SongControllerTest extends RoomWebTestCase
         // song must be added in database and running as it's the only song in the playlist
         $this->assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $updatedRoom->getCurrentSong()->getUrl());
         $this->assertFalse($updatedRoom->getCurrentSong()->getIsPaused());
+        $this->assertSame('dQw4w9WgXcQ_title', $updatedRoom->getCurrentSong()->getTitle());
+        $this->assertSame('dQw4w9WgXcQ_author', $updatedRoom->getCurrentSong()->getAuthor());
+        $this->assertSame(1, $updatedRoom->getCurrentSong()->getLengthInSeconds());
+    }
+
+    public function testWhenAddingAnUnexistingSongThenNotFoundExceptionIsThrowed(): void
+    {
+        $room = $this->createRoom();
+
+        $this->client->jsonRequest(Request::METHOD_POST, '/room/'.$room->getId().'/song', [
+            'url' => 'https://www.youtube.com/watch?v=should_throw_not_found',
+        ], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
+        ]);
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertSame('Song not found', $data['title']);
+        $this->assertSame(404, $data['status']);
     }
 
     /**
