@@ -42,7 +42,7 @@ class YoutubeClient implements SongProviderInterface
         $duration = $duration->days * 86400 + $duration->h * 3600 + $duration->i * 60 + $duration->s;
 
         return new SongDTO(
-            $resource,
+            (string) $resource,
             $duration,
             $video->getSnippet()->getTitle(),
             $video->getSnippet()->getChannelTitle()

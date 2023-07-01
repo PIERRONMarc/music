@@ -26,6 +26,21 @@ class Song
      */
     private bool $isPaused = false;
 
+    /**
+     * @MongoDB\Field(type="string")
+     */
+    private string $title;
+
+    /**
+     * @MongoDB\Field(type="string")
+     */
+    private string $author;
+
+    /**
+     * @MongoDB\Field(type="int")
+     */
+    private int $lengthInSeconds;
+
     public function getId(): string
     {
         return $this->id;
@@ -58,6 +73,42 @@ class Song
     public function setIsPaused(bool $isPaused): self
     {
         $this->isPaused = $isPaused;
+
+        return $this;
+    }
+
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+
+    public function setTitle(string $title): self
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+
+    public function getAuthor(): string
+    {
+        return $this->author;
+    }
+
+    public function setAuthor(string $author): self
+    {
+        $this->author = $author;
+
+        return $this;
+    }
+
+    public function getLengthInSeconds(): int
+    {
+        return $this->lengthInSeconds;
+    }
+
+    public function setLengthInSeconds(int $lengthInSeconds): self
+    {
+        $this->lengthInSeconds = $lengthInSeconds;
 
         return $this;
     }

@@ -14,7 +14,11 @@ use App\Mercure\Message\UpdateCurrentSongMessage;
 use App\Repository\RoomRepository;
 use App\Service\Jwt\TokenValidator;
 use App\Service\Room\RoomAuthorization;
+use App\Service\SongProvider\Exception\SongNotFoundException;
+use App\Service\SongProvider\Youtube\YoutubeClient;
 use Doctrine\ODM\MongoDB\DocumentManager;
+use Exception;
+use http\Exception\RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,7 +37,8 @@ class SongController extends AbstractController
         Request $request,
         TokenValidator $tokenValidator,
         RoomAuthorization $roomAuthorization,
-        HubInterface $hub
+        HubInterface $hub,
+        YoutubeClient $youtubeClient
     ): Response {
         $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
 
@@ -56,11 +61,31 @@ class SongController extends AbstractController
             throw new AccessDeniedHttpException('JWT Token does not belong to this room');
         }
 
-        if (!$roomAuthorization->guestIsGranted(Guest::ROLE_ADMIN, $payload['guestName'], $room->getGuests()->toArray())) {
+        if (!$roomAuthorization->guestIsGranted(
+            Guest::ROLE_ADMIN,
+            $payload['guestName'],
+            $room->getGuests()->toArray()
+        )) {
             throw new AccessDeniedHttpException("You don't have the permission to add song to this room");
         }
 
-        $song = (new Song())->setUrl($request->request->get('url'));
+        $url = $request->request->get('url');
+        parse_str(parse_url($url, \PHP_URL_QUERY), $query);
+        $videoId = $query['v'] ?? null;
+
+        try {
+            $songDTO = $youtubeClient->getSong($videoId);
+        } catch (SongNotFoundException $exception) {
+            throw new NotFoundHttpException('Song not found');
+        } catch (Exception $exception) {
+            throw new RuntimeException('Searching the song failed');
+        }
+
+        $song = (new Song())
+            ->setUrl($url)
+            ->setTitle($songDTO->title)
+            ->setAuthor($songDTO->author)
+            ->setLengthInSeconds($songDTO->lengthInSeconds);
         if (null === $room->getCurrentSong()) {
             $room->setCurrentSong($song);
         } else {
@@ -103,7 +128,11 @@ class SongController extends AbstractController
             throw new AccessDeniedHttpException('JWT Token does not belong to this room');
         }
 
-        if ($roomAuthorization->guestIsGranted(Guest::ROLE_GUEST, $payload['guestName'], $room->getGuests()->toArray())) {
+        if ($roomAuthorization->guestIsGranted(
+            Guest::ROLE_GUEST,
+            $payload['guestName'],
+            $room->getGuests()->toArray()
+        )) {
             throw new AccessDeniedHttpException("You don't have the permission to delete song in this room");
         }
 
@@ -150,7 +179,11 @@ class SongController extends AbstractController
             throw new AccessDeniedHttpException('JWT Token does not belong to this room');
         }
 
-        if ($roomAuthorization->guestIsGranted(Guest::ROLE_GUEST, $payload['guestName'], $room->getGuests()->toArray())) {
+        if ($roomAuthorization->guestIsGranted(
+            Guest::ROLE_GUEST,
+            $payload['guestName'],
+            $room->getGuests()->toArray()
+        )) {
             throw new AccessDeniedHttpException("You don't have the permission to update the current song in this room");
         }
 
@@ -192,7 +225,11 @@ class SongController extends AbstractController
             throw new AccessDeniedHttpException('JWT Token does not belong to this room');
         }
 
-        if ($roomAuthorization->guestIsGranted(Guest::ROLE_GUEST, $payload['guestName'], $room->getGuests()->toArray())) {
+        if ($roomAuthorization->guestIsGranted(
+            Guest::ROLE_GUEST,
+            $payload['guestName'],
+            $room->getGuests()->toArray()
+        )) {
             throw new AccessDeniedHttpException("You don't have the permission to go to the next song in this room");
         }
 

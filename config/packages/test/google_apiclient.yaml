@@ -1,0 +1,3 @@
+services:
+    Google\Service\YouTube:
+        class: App\Tests\Functional\Stub\YoutubeStub
