@@ -14,7 +14,7 @@ class UpdateCurrentSongMessage extends AbstractRoomActionMessage
      */
     public function __construct(string $roomId, string $url, bool $isPaused)
     {
-        parent::__construct($roomId, 'updateCurrentSong', [
+        parent::__construct($roomId, 'UPDATE_CURRENT_SONG', [
             'url' => $url,
             'isPaused' => $isPaused,
         ]);

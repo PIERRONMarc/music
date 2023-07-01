@@ -14,7 +14,7 @@ class GuestJoinMessage extends AbstractRoomActionMessage
      */
     public function __construct(string $roomId, string $name, string $role)
     {
-        parent::__construct($roomId, 'guestJoin', [
+        parent::__construct($roomId, 'GUEST_JOIN', [
             'name' => $name,
             'role' => $role,
         ]);
