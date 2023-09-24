@@ -12,11 +12,20 @@ class AddSongMessage extends AbstractRoomActionMessage
      * @param string $songId id of the added song
      * @param string $url    url of the added song
      */
-    public function __construct(string $roomId, string $songId, string $url)
-    {
+    public function __construct(
+        string $roomId,
+        string $songId,
+        string $url,
+        string $title,
+        string $author,
+        string $lengthInSeconds
+    ) {
         parent::__construct($roomId, 'addSong', [
-            'songId' => $songId,
+            'id' => $songId,
             'url' => $url,
+            'title' => $title,
+            'author' => $author,
+            'lengthInSeconds' => $lengthInSeconds,
         ]);
     }
 }

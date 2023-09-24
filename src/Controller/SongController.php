@@ -97,7 +97,10 @@ class SongController extends AbstractController
         $message = new AddSongMessage(
             $room->getId(),
             $song->getId(),
-            $song->getUrl()
+            $song->getUrl(),
+            $song->getId(),
+            $song->getAuthor(),
+            $song->getLengthInSeconds(),
         );
         $hub->publish($message->buildUpdate());
 
