@@ -58,7 +58,7 @@ class RoomController extends AbstractController
         return $this->json($room, Response::HTTP_CREATED);
     }
 
-    #[Route('/room', name: 'get_all_room', methods: ['GET'])]
+    #[Route('/room', name: 'get_all_room', methods: ['GET', 'OPTIONS'])]
     public function getAllRooms(DocumentManager $dm, Request $request): Response
     {
         $page = 0 === $request->query->getInt('page', 1) ? 1 : $request->query->getInt('page', 1);
@@ -68,7 +68,7 @@ class RoomController extends AbstractController
         return $this->json($rooms, Response::HTTP_OK, [], ['groups' => 'get_all_room']);
     }
 
-    #[Route('/join/{id}', name: 'join_room', methods: ['GET'])]
+    #[Route('/join/{id}', name: 'join_room', methods: ['GET', 'OPTIONS'])]
     public function joinRoom(
         string $id,
         DocumentManager $dm,

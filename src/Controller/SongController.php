@@ -30,7 +30,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class SongController extends AbstractController
 {
-    #[Route('room/{id}/song', name: 'add_song', methods: ['POST'])]
+    #[Route('room/{id}/song', name: 'add_song', methods: ['POST', 'OPTIONS'])]
     public function addSong(
         string $id,
         DocumentManager $dm,
