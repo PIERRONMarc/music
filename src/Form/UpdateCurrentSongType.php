@@ -6,7 +6,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\NotNull;
+use Symfony\Component\Validator\Constraints\Type;
 
 class UpdateCurrentSongType extends AbstractType
 {
@@ -20,7 +20,7 @@ class UpdateCurrentSongType extends AbstractType
                 ],
                 'required' => true,
                 'constraints' => [
-                    new NotNull(),
+                    new Type('boolean'),
                 ],
             ])
         ;
