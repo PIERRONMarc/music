@@ -10,6 +10,7 @@ use App\Form\SongType;
 use App\Form\UpdateCurrentSongType;
 use App\Mercure\Message\AddSongMessage;
 use App\Mercure\Message\DeleteSongMessage;
+use App\Mercure\Message\NextSongMessage;
 use App\Mercure\Message\UpdateCurrentSongMessage;
 use App\Repository\RoomRepository;
 use App\Service\Jwt\TokenValidator;
@@ -82,7 +83,7 @@ class SongController extends AbstractController
         }
 
         $song = (new Song())
-            ->setUrl($url)
+            ->setUrl($songDTO->id)
             ->setTitle($songDTO->title)
             ->setAuthor($songDTO->author)
             ->setLengthInSeconds($songDTO->lengthInSeconds);
@@ -237,20 +238,16 @@ class SongController extends AbstractController
         }
 
         if ($room->getSongs()->isEmpty()) {
-            throw new NotFoundHttpException('There is no song to go');
+            $room->setCurrentSong(null);
+        } else {
+            $room->setCurrentSong($room->getSongs()->first());
+            $room->removeSong($room->getSongs()->first());
         }
-
-        $room->setCurrentSong($room->getSongs()->first());
-        $room->removeSong($room->getSongs()->first());
 
         $documentManager->persist($room);
         $documentManager->flush();
 
-        $message = new UpdateCurrentSongMessage(
-            $room->getId(),
-            $room->getCurrentSong()->getUrl(),
-            $room->getCurrentSong()->getIsPaused()
-        );
+        $message = new NextSongMessage($room->getId());
 
         $hub->publish($message->buildUpdate());
 
