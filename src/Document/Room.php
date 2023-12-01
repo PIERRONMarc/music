@@ -131,9 +131,15 @@ class Room
         return $this;
     }
 
-    public function removeGuest(Guest $guest): self
+    public function removeGuest(string $guestName): self
     {
-        $this->guests->removeElement($guest);
+        foreach ($this->guests as $guest) {
+            if ($guest->getName() === $guestName) {
+                $this->guests->removeElement($guest);
+
+                return $this;
+            }
+        }
 
         return $this;
     }
