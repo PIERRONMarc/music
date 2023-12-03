@@ -196,6 +196,7 @@ class SongController extends AbstractController
         }
 
         $room->getCurrentSong()->setIsPaused($request->request->get('isPaused'));
+        $documentManager->flush();
 
         $message = new UpdateCurrentSongMessage(
             $room->getId(),
