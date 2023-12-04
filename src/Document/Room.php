@@ -143,4 +143,39 @@ class Room
 
         return $this;
     }
+
+    public function getGuest(string $guestName): ?Guest
+    {
+        foreach ($this->guests as $guest) {
+            if ($guest->getName() === $guestName) {
+                return $guest;
+            }
+        }
+
+        return null;
+    }
+
+    public function selectAnotherAdmin(): void
+    {
+        if ($this->hasGuests()) {
+            $guest = $this->guests->first();
+            $guest->setAdmin();
+        }
+    }
+
+    public function hasGuests(): bool
+    {
+        return $this->guests->count() > 0;
+    }
+
+    public function getAdmin(): Guest
+    {
+        foreach ($this->guests as $guest) {
+            if ($guest->isAdmin()) {
+                return $guest;
+            }
+        }
+
+        throw new \LogicException("There is no admin in this room");
+    }
 }

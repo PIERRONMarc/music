@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Document\Room;
 use App\Mercure\Message\GuestLeaveMessage;
+use App\Mercure\Message\UpdateGuestMessage;
 use App\Service\Jwt\TokenValidator;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -43,6 +44,21 @@ class GuestController extends AbstractController
         $guestName = $payload['guestName'];
         if (!$guestName) {
             throw new AccessDeniedHttpException("There is no guest name in the token");
+        }
+
+        $guest = $room->getGuest($guestName);
+        if (!$guest) {
+            throw new NotFoundHttpException("There is no guest with this name");
+        }
+
+        $room->removeGuest($guestName);
+
+        if ($guest->isAdmin()) {
+            $room->selectAnotherAdmin();
+            $admin = $room->getAdmin();
+
+            $message = new UpdateGuestMessage($roomId, $admin->getName(), $admin->getRole());
+            $hub->publish($message->buildUpdate());
         }
 
         $room->removeGuest($guestName);
