@@ -7,6 +7,7 @@ use App\Document\Room;
 use App\DTO\JoinRoomDTO;
 use App\Exception\FormHttpException;
 use App\Form\HandleGuestRoleType;
+use App\Mercure\Message\CreateRoomMessage;
 use App\Mercure\Message\GuestJoinMessage;
 use App\Mercure\Message\UpdateGuestMessage;
 use App\Service\Jwt\TokenFactory;
@@ -31,7 +32,8 @@ class RoomController extends AbstractController
         DocumentManager $manager,
         RandomRoomNameGenerator $randomRoomNameGenerator,
         RandomGuestNameGenerator $randomGuestNameGenerator,
-        TokenFactory $tokenFactory
+        TokenFactory $tokenFactory,
+        HubInterface $hub,
     ): Response {
         $guestName = $randomGuestNameGenerator->getName();
         $host = (new Guest())
@@ -54,6 +56,9 @@ class RoomController extends AbstractController
             ],
         ])->toString());
         $room->setHost($host);
+
+        $message = new CreateRoomMessage($room->getId(), $room->getName());
+        $hub->publish($message->buildUpdate());
 
         return $this->json($room, Response::HTTP_CREATED);
     }
