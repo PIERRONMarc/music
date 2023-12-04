@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Document\Room;
+use App\Mercure\Message\DeleteRoomMessage;
 use App\Mercure\Message\GuestLeaveMessage;
 use App\Mercure\Message\UpdateGuestMessage;
 use App\Service\Jwt\TokenValidator;
@@ -52,6 +53,16 @@ class GuestController extends AbstractController
         }
 
         $room->removeGuest($guestName);
+
+        if (!$room->hasGuests()) {
+            $documentManager->remove($room);
+            $documentManager->flush();
+
+            $message = new DeleteRoomMessage($room->getName());
+            $hub->publish($message->buildUpdate());
+
+            return new Response();
+        }
 
         if ($guest->isAdmin()) {
             $room->selectAnotherAdmin();
