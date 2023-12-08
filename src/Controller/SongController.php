@@ -99,7 +99,7 @@ class SongController extends AbstractController
             $room->getId(),
             $song->getId(),
             $song->getUrl(),
-            $song->getId(),
+            $song->getTitle(),
             $song->getAuthor(),
             $song->getLengthInSeconds(),
         );
