@@ -17,7 +17,7 @@ class SongType extends AbstractType
             ->add('url', UrlType::class, [
                 'required' => true,
                 'constraints' => [
-                    new Regex("/^https:\/\/www.youtube.com\/watch?.*$/", 'This value is not a valid Youtube video URL.'),
+                    new Regex("/^https:\/\/www.youtube.com\/[watch|playlist]?.*$/", 'This value is not a valid Youtube video URL.'),
                     new NotNull(),
                 ],
             ])

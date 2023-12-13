@@ -73,9 +73,17 @@ class SongController extends AbstractController
         $url = $request->request->get('url');
         parse_str(parse_url($url, \PHP_URL_QUERY), $query);
         $videoId = $query['v'] ?? null;
+        $playListId = $query['list'] ?? null;
+        $songDTO = $songDTOList = null;
 
         try {
-            $songDTO = $youtubeClient->getSong($videoId);
+            if ($videoId) {
+                $songDTO = $youtubeClient->getSong($videoId);
+            }
+
+            if ($playListId) {
+                $songDTOList = $youtubeClient->getSongsFromPlaylist($playListId);
+            }
         } catch (SongNotFoundException $exception) {
             throw new NotFoundHttpException('Song not found');
         } catch (Exception $exception) {
@@ -83,10 +91,10 @@ class SongController extends AbstractController
         }
 
         $song = (new Song())
-            ->setUrl($songDTO->id)
-            ->setTitle($songDTO->title)
-            ->setAuthor($songDTO->author)
-            ->setLengthInSeconds($songDTO->lengthInSeconds);
+            ->setUrl($songDTO->id ?? $songDTOList[0]->id)
+            ->setTitle($songDTO->title ?? $songDTOList[0]->title)
+            ->setAuthor($songDTO->author ?? $songDTOList[0]->author)
+            ->setLengthInSeconds($songDTO->lengthInSeconds ?? $songDTOList[0]->lengthInSeconds);
         if (null === $room->getCurrentSong()) {
             $room->setCurrentSong($song);
         } else {
@@ -95,15 +103,30 @@ class SongController extends AbstractController
 
         $dm->flush();
 
-        $message = new AddSongMessage(
-            $room->getId(),
-            $song->getId(),
-            $song->getUrl(),
-            $song->getTitle(),
-            $song->getAuthor(),
-            $song->getLengthInSeconds(),
-        );
-        $hub->publish($message->buildUpdate());
+        if ($songDTO) {
+            $message = new AddSongMessage(
+                $room->getId(),
+                $song->getId(),
+                $song->getUrl(),
+                $song->getTitle(),
+                $song->getAuthor(),
+                $song->getLengthInSeconds(),
+            );
+            $hub->publish($message->buildUpdate());
+        } else {
+            foreach ($songDTOList as $songDTO) {
+                $message = new AddSongMessage(
+                    $room->getId(),
+                    $songDTO->id,
+                    $songDTO->id,
+                    $songDTO->title,
+                    $songDTO->author,
+                    $songDTO->lengthInSeconds,
+                );
+                $hub->publish($message->buildUpdate());
+            }
+        }
+
 
         return $this->json($song, Response::HTTP_CREATED);
     }
