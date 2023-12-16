@@ -32,7 +32,6 @@ class RoomController extends AbstractController
 {
     #[Route('/room', name: 'create_room', methods: ['POST'])]
     public function index(
-        DocumentManager $documentManager,
         EntityManagerInterface $entityManager,
         RandomRoomNameGenerator $randomRoomNameGenerator,
         RandomGuestNameGenerator $randomGuestNameGenerator,
@@ -40,18 +39,9 @@ class RoomController extends AbstractController
         HubInterface $hub,
     ): Response {
         $guestName = $randomGuestNameGenerator->getName();
-        $hostDocument = (new GuestDocument())
-            ->setName($guestName)
-            ->setRole(GuestDocument::ROLE_ADMIN)
-        ;
         $host = (new Guest())
             ->setName($guestName)
             ->setRole(Guest::ROLE_ADMIN)
-        ;
-        $roomDocument = (new RoomDocument())
-            ->setHost($hostDocument)
-            ->addGuest($hostDocument)
-            ->setName($randomRoomNameGenerator->getName())
         ;
         $room = (new Room())
             ->setHost($host)
@@ -59,23 +49,21 @@ class RoomController extends AbstractController
             ->setName($randomRoomNameGenerator->getName())
         ;
 
-        $documentManager->persist($roomDocument);
         $entityManager->persist($room);
-        $documentManager->flush();
         $entityManager->flush();
 
-        $hostDocument->setToken($tokenFactory->createToken([
+        $host->setToken($tokenFactory->createToken([
             'claims' => [
                 'guestName' => $guestName,
-                'roomId' => $roomDocument->getId(),
+                'roomId' => $room->getId()->toRfc4122(),
             ],
         ])->toString());
-        $roomDocument->setHost($hostDocument);
+        $room->setHost($host);
 
-        $message = new CreateRoomMessage($roomDocument->getId(), $roomDocument->getName());
+        $message = new CreateRoomMessage($room->getId(), $room->getName());
         $hub->publish($message->buildUpdate());
 
-        return $this->json($roomDocument, Response::HTTP_CREATED);
+        return $this->json($room, Response::HTTP_CREATED);
     }
 
     #[Route('/room', name: 'get_all_room', methods: ['GET', 'OPTIONS'])]

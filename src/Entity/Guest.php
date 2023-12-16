@@ -6,6 +6,7 @@ use App\Repository\GuestRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Annotation\Ignore;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: GuestRepository::class)]
@@ -28,6 +29,7 @@ class Guest
 
     private string $token;
 
+    #[Ignore]
     #[ORM\ManyToOne(inversedBy: 'guests')]
     #[ORM\JoinColumn(nullable: true)]
     private ?Room $room = null;

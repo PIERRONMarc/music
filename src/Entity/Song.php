@@ -6,6 +6,7 @@ use App\Repository\SongRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Annotation\Ignore;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: SongRepository::class)]
@@ -32,6 +33,7 @@ class Song
     #[ORM\Column]
     private int $lengthInSeconds;
 
+    #[Ignore]
     #[ORM\ManyToOne(inversedBy: 'songs')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Room $room = null;
