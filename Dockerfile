@@ -31,10 +31,9 @@ RUN set -eux; \
 		opcache \
 		zip \
         mongodb \
+		pdo_pgsql \
 	;
 
-###> recipes ###
-###< recipes ###
 
 COPY --link frankenphp/conf.d/app.ini $PHP_INI_DIR/conf.d/
 COPY --link --chmod=755 frankenphp/docker-entrypoint.sh /usr/local/bin/docker-entrypoint

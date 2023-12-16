@@ -20,5 +20,6 @@ services:
             - host.docker.internal:host-gateway
         tty: true
 
-###> symfony/mercure-bundle ###
-###< symfony/mercure-bundle ###
+    database:
+      ports:
+        - "5432"
