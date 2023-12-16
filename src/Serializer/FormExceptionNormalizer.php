@@ -30,8 +30,8 @@ class FormExceptionNormalizer implements NormalizerInterface
 
     /**
      * @param null $format
-     */
-    public function supportsNormalization($data, $format = null): bool
+     * @param array<mixed> $context     */
+    public function supportsNormalization($data, $format = null, $context = []): bool
     {
         return $data instanceof FormHttpException;
     }

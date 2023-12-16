@@ -23,14 +23,14 @@ class BeforeActionSubscriber implements EventSubscriberInterface
     {
         $request = $event->getRequest();
 
-        if ('json' != $request->getContentType() || !$request->getContent()) {
+        if ('json' != $request->getContentTypeFormat() || !$request->getContent()) {
             return;
         }
 
         $data = json_decode($request->getContent(), true);
 
-        if (\JSON_ERROR_NONE !== \json_last_error()) {
-            throw new BadRequestHttpException('invalid json body: '.\json_last_error_msg());
+        if (\JSON_ERROR_NONE !== json_last_error()) {
+            throw new BadRequestHttpException('invalid json body: '.json_last_error_msg());
         }
 
         $request->request->replace(\is_array($data) ? $data : []);
