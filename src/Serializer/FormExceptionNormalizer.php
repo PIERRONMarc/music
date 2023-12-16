@@ -29,8 +29,7 @@ class FormExceptionNormalizer implements NormalizerInterface
     }
 
     /**
-     * @param mixed $data
-     * @param null  $format
+     * @param null $format
      */
     public function supportsNormalization($data, $format = null): bool
     {

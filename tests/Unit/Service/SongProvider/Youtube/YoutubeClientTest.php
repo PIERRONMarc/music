@@ -5,7 +5,6 @@ namespace App\Tests\Unit\Service\SongProvider\Youtube;
 use App\DTO\SongDTO;
 use App\Service\SongProvider\Exception\SongNotFoundException;
 use App\Service\SongProvider\Youtube\YoutubeClient;
-use Generator;
 use Google\Service\YouTube;
 use Google\Service\YouTube\Resource\Videos;
 use Google\Service\YouTube\Video;
@@ -16,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 
 class YoutubeClientTest extends TestCase
 {
-    public function provideSongDTO(): Generator
+    public function provideSongDTO(): \Generator
     {
         yield [
             'expectedSong' => new SongDTO(
@@ -28,10 +27,10 @@ class YoutubeClientTest extends TestCase
         ];
         yield [
             'expectedSong' => new SongDTO(
-            '2',
-            1,
-            'anotherTitle',
-            'anotherAuthor'
+                '2',
+                1,
+                'anotherTitle',
+                'anotherAuthor'
             ),
         ];
     }

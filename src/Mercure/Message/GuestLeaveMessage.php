@@ -2,9 +2,6 @@
 
 namespace App\Mercure\Message;
 
-/**
- * {@inheritDoc}
- */
 class GuestLeaveMessage extends AbstractRoomActionMessage
 {
     /**
@@ -13,6 +10,6 @@ class GuestLeaveMessage extends AbstractRoomActionMessage
      */
     public function __construct(string $roomId, string $name)
     {
-        parent::__construct($roomId, 'guestLeave', [ 'name' => $name ]);
+        parent::__construct($roomId, 'guestLeave', ['name' => $name]);
     }
 }

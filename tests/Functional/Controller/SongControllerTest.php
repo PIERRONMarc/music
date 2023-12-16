@@ -4,8 +4,6 @@ namespace App\Tests\Functional\Controller;
 
 use App\Document\Room;
 use App\Tests\Functional\RoomWebTestCase;
-use Exception;
-use Generator;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -37,7 +35,7 @@ class SongControllerTest extends RoomWebTestCase
         $this->assertSame(404, $data['status']);
     }
 
-    private function provideRouteThatNeedARoom(): Generator
+    private function provideRouteThatNeedARoom(): \Generator
     {
         yield [
             'httpMethod' => Request::METHOD_POST,
@@ -105,7 +103,7 @@ class SongControllerTest extends RoomWebTestCase
         $this->assertSame($violationMessage, $data['violations'][0]['message']);
     }
 
-    private function provideWrongAddSongPayload(): Generator
+    private function provideWrongAddSongPayload(): \Generator
     {
         yield [
             'payload' => [
@@ -188,7 +186,7 @@ class SongControllerTest extends RoomWebTestCase
         $this->assertSame($violationMessage, $data['violations'][0]['message']);
     }
 
-    private function provideWrongUpdateCurrentSongPayload(): Generator
+    private function provideWrongUpdateCurrentSongPayload(): \Generator
     {
         yield [
             'payload' => [],
@@ -236,7 +234,7 @@ class SongControllerTest extends RoomWebTestCase
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     protected function tearDown(): void
     {

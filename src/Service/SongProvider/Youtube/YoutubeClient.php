@@ -5,22 +5,18 @@ namespace App\Service\SongProvider\Youtube;
 use App\DTO\SongDTO;
 use App\Service\SongProvider\Exception\SongNotFoundException;
 use App\Service\SongProvider\SongProviderInterface;
-use DateInterval;
-use Exception;
 use Google\Service\YouTube;
 use Google\Service\YouTube\Video;
 
 class YoutubeClient implements SongProviderInterface
 {
     public function __construct(
-       private YouTube $youtubeService
+        private YouTube $youtubeService
     ) {
     }
 
     /**
-     * {@inheritDoc}
-     *
-     * @throws Exception
+     * @throws \Exception
      */
     public function getSong(mixed $resource): SongDTO
     {
@@ -58,7 +54,7 @@ class YoutubeClient implements SongProviderInterface
             throw new SongNotFoundException();
         }
 
-        $ids = join(',', array_map(function($playlistItem) {
+        $ids = implode(',', array_map(function ($playlistItem) {
             return $playlistItem->getContentDetails()->getVideoId();
         }, $playlistItems->getItems()));
 
@@ -82,7 +78,7 @@ class YoutubeClient implements SongProviderInterface
     private function videoToSongDTO(Video $video): SongDTO
     {
         $duration = $video->getContentDetails()->getDuration();
-        $duration = new DateInterval($duration);
+        $duration = new \DateInterval($duration);
         $duration = $duration->days * 86400 + $duration->h * 3600 + $duration->i * 60 + $duration->s;
 
         return new SongDTO(

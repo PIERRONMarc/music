@@ -24,8 +24,7 @@ class GuestController extends AbstractController
         DocumentManager $documentManager,
         TokenValidator $tokenValidator,
         HubInterface $hub,
-    ): Response
-    {
+    ): Response {
         $token = $request->toArray()['token'] ?? null;
         if (!$token) {
             throw new NotFoundHttpException('There is no token in the request');
@@ -44,12 +43,12 @@ class GuestController extends AbstractController
 
         $guestName = $payload['guestName'];
         if (!$guestName) {
-            throw new AccessDeniedHttpException("There is no guest name in the token");
+            throw new AccessDeniedHttpException('There is no guest name in the token');
         }
 
         $guest = $room->getGuest($guestName);
         if (!$guest) {
-            throw new NotFoundHttpException("There is no guest with this name");
+            throw new NotFoundHttpException('There is no guest with this name');
         }
 
         $room->removeGuest($guestName);

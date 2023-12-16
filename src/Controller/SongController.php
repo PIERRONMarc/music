@@ -18,7 +18,6 @@ use App\Service\Room\RoomAuthorization;
 use App\Service\SongProvider\Exception\SongNotFoundException;
 use App\Service\SongProvider\SongProviderInterface;
 use Doctrine\ODM\MongoDB\DocumentManager;
-use Exception;
 use http\Exception\RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -86,7 +85,7 @@ class SongController extends AbstractController
             }
         } catch (SongNotFoundException $exception) {
             throw new NotFoundHttpException('Song not found');
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             throw new RuntimeException('Searching the song failed');
         }
 
@@ -126,7 +125,6 @@ class SongController extends AbstractController
                 $hub->publish($message->buildUpdate());
             }
         }
-
 
         return $this->json($song, Response::HTTP_CREATED);
     }

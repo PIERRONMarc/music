@@ -4,8 +4,6 @@ namespace App\Tests\Functional\Controller;
 
 use App\Document\Guest;
 use App\Tests\Functional\RoomWebTestCase;
-use Exception;
-use Generator;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -42,7 +40,7 @@ class AuthorizationTest extends RoomWebTestCase
         $this->assertSame(403, $data['status']);
     }
 
-    private function provideRouteThatRequireARole(): Generator
+    private function provideRouteThatRequireARole(): \Generator
     {
         yield [
             'httpMethod' => Request::METHOD_PATCH,
@@ -101,7 +99,7 @@ class AuthorizationTest extends RoomWebTestCase
         $this->assertSame(403, $data['status']);
     }
 
-    private function provideRouteWhereJWTMustBelongToARoom(): Generator
+    private function provideRouteWhereJWTMustBelongToARoom(): \Generator
     {
         yield [
             'httpMethod' => Request::METHOD_PATCH,
@@ -141,7 +139,7 @@ class AuthorizationTest extends RoomWebTestCase
         $this->assertResponseStatusCodeSame(401);
     }
 
-    private function provideRouteSecuredByJWT(): Generator
+    private function provideRouteSecuredByJWT(): \Generator
     {
         yield [
             'httpMethod' => Request::METHOD_PATCH,
@@ -175,7 +173,7 @@ class AuthorizationTest extends RoomWebTestCase
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     protected function tearDown(): void
     {

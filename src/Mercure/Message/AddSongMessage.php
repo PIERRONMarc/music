@@ -2,9 +2,6 @@
 
 namespace App\Mercure\Message;
 
-/**
- * {@inheritDoc}
- */
 class AddSongMessage extends AbstractRoomActionMessage
 {
     /**
@@ -18,7 +15,7 @@ class AddSongMessage extends AbstractRoomActionMessage
         string $url,
         string $title,
         string $author,
-        string $lengthInSeconds
+        int $lengthInSeconds
     ) {
         parent::__construct($roomId, 'addSong', [
             'id' => $songId,

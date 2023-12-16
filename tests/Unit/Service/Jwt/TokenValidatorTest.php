@@ -4,7 +4,6 @@ namespace App\Tests\Unit\Service\Jwt;
 
 use App\Service\Jwt\TokenFactory;
 use App\Service\Jwt\TokenValidator;
-use Generator;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
@@ -25,7 +24,7 @@ class TokenValidatorTest extends KernelTestCase
         $tokenValidator->validateAuthorizationHeaderAndGetToken($token);
     }
 
-    private function provideWrongAuthorization(): Generator
+    private function provideWrongAuthorization(): \Generator
     {
         yield [
             'token' => null,

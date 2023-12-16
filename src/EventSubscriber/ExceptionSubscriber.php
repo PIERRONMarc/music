@@ -11,7 +11,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Throwable;
 
 class ExceptionSubscriber implements EventSubscriberInterface
 {
@@ -38,14 +37,14 @@ class ExceptionSubscriber implements EventSubscriberInterface
         $request = $event->getRequest();
 
         if (\in_array('application/json', $request->getAcceptableContentTypes()) && $this->supportException(
-                $exception
-            )) {
+            $exception
+        )) {
             $response = $this->createApiResponse($exception);
             $event->setResponse($response);
         }
     }
 
-    private function supportException(Throwable $exception): bool
+    private function supportException(\Throwable $exception): bool
     {
         return $exception instanceof HttpExceptionInterface;
     }
@@ -53,7 +52,7 @@ class ExceptionSubscriber implements EventSubscriberInterface
     /**
      * Creates a Json response from any Exception.
      */
-    private function createApiResponse(Throwable $exception): JsonResponse
+    private function createApiResponse(\Throwable $exception): JsonResponse
     {
         $statusCode = $exception instanceof HttpExceptionInterface ? $exception->getStatusCode(
         ) : Response::HTTP_INTERNAL_SERVER_ERROR;

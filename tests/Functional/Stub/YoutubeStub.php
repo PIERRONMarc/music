@@ -2,9 +2,7 @@
 
 namespace App\Tests\Functional\Stub;
 
-use Google_Service_YouTube;
-
-class YoutubeStub extends Google_Service_YouTube
+class YoutubeStub extends \Google_Service_YouTube
 {
     /**
      * @var VideosStub

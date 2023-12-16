@@ -47,7 +47,7 @@ class BeforeActionSubscriberTest extends TestCase
     /**
      * @param mixed[] $server
      */
-    private function getEvent(?string $content = null, array $server = ['CONTENT_TYPE' => 'application/json']): ControllerEvent
+    private function getEvent(string $content = null, array $server = ['CONTENT_TYPE' => 'application/json']): ControllerEvent
     {
         $request = new Request(
             [],

@@ -6,7 +6,6 @@ use App\Document\Guest;
 use App\Document\Room;
 use App\Service\Room\RoomAuthorization;
 use App\Tests\Functional\DatabaseTrait;
-use Exception;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 class RoomAuthorizationTest extends KernelTestCase
@@ -33,7 +32,7 @@ class RoomAuthorizationTest extends KernelTestCase
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     protected function tearDown(): void
     {

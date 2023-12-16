@@ -2,9 +2,6 @@
 
 namespace App\Mercure\Message;
 
-/**
- * {@inheritDoc}
- */
 abstract class AbstractRoomActionMessage extends AbstractMessage
 {
     /**

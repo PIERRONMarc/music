@@ -82,7 +82,7 @@ class Guest
 
     public function isAdmin(): bool
     {
-        return $this->role === self::ROLE_ADMIN;
+        return self::ROLE_ADMIN === $this->role;
     }
 
     public function setAdmin(): void

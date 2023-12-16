@@ -7,7 +7,6 @@ use App\Document\Room;
 use App\Document\Song;
 use App\Repository\RoomRepository;
 use App\Tests\Functional\DatabaseTrait;
-use Exception;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 class RoomRepositoryTest extends KernelTestCase
@@ -15,7 +14,7 @@ class RoomRepositoryTest extends KernelTestCase
     use DatabaseTrait;
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     protected function setUp(): void
     {

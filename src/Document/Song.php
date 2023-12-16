@@ -22,6 +22,7 @@ class Song
 
     /**
      * @MongoDB\Field(type="bool")
+     *
      * @SerializedName("isPaused")
      */
     private bool $isPaused = false;

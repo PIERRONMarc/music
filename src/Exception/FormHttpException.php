@@ -2,7 +2,6 @@
 
 namespace App\Exception;
 
-use Exception;
 use Symfony\Component\Form\FormErrorIterator;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -18,7 +17,7 @@ class FormHttpException extends HttpException
         FormInterface $form,
         int $statusCode = 400,
         string $message = 'Validation failed',
-        Exception $previous = null,
+        \Exception $previous = null,
         array $headers = [],
         ?int $code = 0
     ) {

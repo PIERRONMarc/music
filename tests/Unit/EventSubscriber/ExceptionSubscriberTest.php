@@ -6,7 +6,6 @@ use App\EventSubscriber\ExceptionSubscriber;
 use App\Exception\FormHttpException;
 use App\Factory\NormalizerFactory;
 use App\Serializer\FormExceptionNormalizer;
-use Exception;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Finder\Exception\AccessDeniedException;
 use Symfony\Component\Form\FormError;
@@ -83,7 +82,7 @@ class ExceptionSubscriberTest extends TestCase
         return new ExceptionSubscriber($normalizerFactory);
     }
 
-    private function getEvent(Request $request, Exception $exception): ExceptionEvent
+    private function getEvent(Request $request, \Exception $exception): ExceptionEvent
     {
         return new ExceptionEvent(
             $this->getMockBuilder(KernelInterface::class)->getMock(),

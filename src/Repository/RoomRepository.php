@@ -5,7 +5,6 @@ namespace App\Repository;
 use App\Document\Room;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Doctrine\ODM\MongoDB\Repository\DocumentRepository;
-use Exception;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\Regex;
 use MongoDB\Driver\Cursor;
@@ -81,7 +80,7 @@ class RoomRepository extends DocumentRepository
     {
         try {
             $songId = new ObjectId($songId);
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return null;
         }
 

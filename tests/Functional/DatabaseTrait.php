@@ -3,7 +3,6 @@
 namespace App\Tests\Functional;
 
 use Doctrine\ODM\MongoDB\DocumentManager;
-use Exception;
 
 trait DatabaseTrait
 {
@@ -13,7 +12,7 @@ trait DatabaseTrait
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     protected function clearDatabase(): void
     {

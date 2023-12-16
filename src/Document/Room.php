@@ -15,12 +15,14 @@ class Room
 {
     /**
      * @MongoDB\Id(strategy="UUID")
+     *
      * @Groups({"get_all_room"})
      */
     private ?string $id = null;
 
     /**
      * @MongoDB\Field(type="string")
+     *
      * @Groups({"get_all_room"})
      */
     private string $name;
@@ -176,6 +178,6 @@ class Room
             }
         }
 
-        throw new \LogicException("There is no admin in this room");
+        throw new \LogicException('There is no admin in this room');
     }
 }

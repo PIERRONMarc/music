@@ -2,9 +2,6 @@
 
 namespace App\Mercure\Message;
 
-/**
- * {@inheritDoc}
- */
 class GuestJoinMessage extends AbstractRoomActionMessage
 {
     /**
