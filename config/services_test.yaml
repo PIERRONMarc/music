@@ -5,3 +5,6 @@ parameters:
 services:
     mercure.hub.default:
         class: App\Tests\Functional\Stub\HubStub
+        
+    App\Service\SongProvider\SongProviderStub: ~
+    App\Service\SongProvider\SongProviderInterface: '@App\Service\SongProvider\SongProviderStub'

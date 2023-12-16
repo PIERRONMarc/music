@@ -48,6 +48,7 @@ class YoutubeClientTest extends TestCase
         $contentDetails = new VideoContentDetails();
         $contentDetails->setDuration('PT0M'.$expectedSong->lengthInSeconds.'S');
         $video = new Video();
+        $video->setId($expectedSong->id);
         $video->setSnippet($snippet);
         $video->setContentDetails($contentDetails);
         $expectedVideoResponse = $this->createMock(VideoListResponse::class);

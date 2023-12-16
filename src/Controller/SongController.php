@@ -16,7 +16,7 @@ use App\Repository\RoomRepository;
 use App\Service\Jwt\TokenValidator;
 use App\Service\Room\RoomAuthorization;
 use App\Service\SongProvider\Exception\SongNotFoundException;
-use App\Service\SongProvider\Youtube\YoutubeClient;
+use App\Service\SongProvider\SongProviderInterface;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Exception;
 use http\Exception\RuntimeException;
@@ -39,7 +39,7 @@ class SongController extends AbstractController
         TokenValidator $tokenValidator,
         RoomAuthorization $roomAuthorization,
         HubInterface $hub,
-        YoutubeClient $youtubeClient
+        SongProviderInterface $youtubeClient
     ): Response {
         $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
 

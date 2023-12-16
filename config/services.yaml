@@ -32,3 +32,5 @@ services:
     App\Factory\NormalizerFactory:
         arguments: [ !tagged serializer.normalizer ]
         public: true
+        
+    App\Service\SongProvider\SongProviderInterface: '@App\Service\SongProvider\Youtube\YoutubeClient'
