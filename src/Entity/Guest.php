@@ -11,6 +11,9 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity(repositoryClass: GuestRepository::class)]
 class Guest
 {
+    public const ROLE_GUEST = 'GUEST';
+    public const ROLE_ADMIN = 'ADMIN';
+
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
