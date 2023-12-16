@@ -2,9 +2,11 @@
 
 namespace App\Controller;
 
-use App\Document\Guest;
-use App\Document\Room;
+use App\Document\Guest as GuestDocument;
+use App\Document\Room as RoomDocument;
 use App\DTO\JoinRoomDTO;
+use App\Entity\Guest;
+use App\Entity\Room;
 use App\Exception\FormHttpException;
 use App\Form\HandleGuestRoleType;
 use App\Mercure\Message\CreateRoomMessage;
@@ -15,6 +17,7 @@ use App\Service\Jwt\TokenValidator;
 use App\Service\RandomNameGenerator\GuestName\RandomGuestNameGenerator;
 use App\Service\RandomNameGenerator\RoomName\RandomRoomNameGenerator;
 use Doctrine\ODM\MongoDB\DocumentManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,7 +32,7 @@ class RoomController extends AbstractController
 {
     #[Route('/room', name: 'create_room', methods: ['POST'])]
     public function index(
-        DocumentManager $manager,
+        EntityManagerInterface $entityManager,
         RandomRoomNameGenerator $randomRoomNameGenerator,
         RandomGuestNameGenerator $randomGuestNameGenerator,
         TokenFactory $tokenFactory,
@@ -46,8 +49,8 @@ class RoomController extends AbstractController
             ->setName($randomRoomNameGenerator->getName())
         ;
 
-        $manager->persist($room);
-        $manager->flush();
+        $entityManager->persist($room);
+        $entityManager->flush();
 
         $host->setToken($tokenFactory->createToken([
             'claims' => [
@@ -68,7 +71,7 @@ class RoomController extends AbstractController
     {
         $page = 0 === $request->query->getInt('page', 1) ? 1 : $request->query->getInt('page', 1);
         $offset = ($page - 1) * 30;
-        $rooms = $dm->getRepository(Room::class)->findBy([], [], 30, $offset);
+        $rooms = $dm->getRepository(RoomDocument::class)->findBy([], [], 30, $offset);
 
         return $this->json($rooms, Response::HTTP_OK, [], ['groups' => 'get_all_room']);
     }
@@ -81,14 +84,14 @@ class RoomController extends AbstractController
         TokenFactory $tokenFactory,
         HubInterface $hub
     ): Response {
-        $room = $dm->getRepository(Room::class)->findOneBy(['id' => str_replace('-', '', $id)]);
+        $room = $dm->getRepository(RoomDocument::class)->findOneBy(['id' => str_replace('-', '', $id)]);
 
         if (!$room) {
             throw new NotFoundHttpException('The room '.$id.' does not exist.');
         }
 
         $guestName = $randomGuestNameGenerator->getNameForRoom($room->getId());
-        $guest = (new Guest())
+        $guest = (new GuestDocument())
             ->setName($guestName)
             ->setToken($tokenFactory->createToken([
                 'claims' => [
@@ -135,7 +138,7 @@ class RoomController extends AbstractController
         $role = $request->request->get('role');
         $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'guestName']);
 
-        $room = $documentManager->getRepository(Room::class)->findOneBy(['id' => $roomId]);
+        $room = $documentManager->getRepository(RoomDocument::class)->findOneBy(['id' => $roomId]);
         if (!$room) {
             throw new NotFoundHttpException('The room does not exist');
         }
