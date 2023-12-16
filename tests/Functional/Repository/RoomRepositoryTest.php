@@ -5,7 +5,7 @@ namespace App\Tests\Functional\Repository;
 use App\Document\Guest;
 use App\Document\Room;
 use App\Document\Song;
-use App\Repository\RoomRepository;
+use App\Repository\RoomDocumentRepository;
 use App\Tests\Functional\DatabaseTrait;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
@@ -31,7 +31,7 @@ class RoomRepositoryTest extends KernelTestCase
         $dm->persist((new Room())->setName('Rd Rcks'));
         $dm->flush();
 
-        /** @var RoomRepository */
+        /** @var RoomDocumentRepository */
         $repository = $dm->getRepository(Room::class);
         $this->assertSame(2, $repository->countRoomWithNameLike('Red Rocks'));
     }
@@ -48,7 +48,7 @@ class RoomRepositoryTest extends KernelTestCase
         $dm->persist($room);
         $dm->flush();
 
-        /** @var RoomRepository */
+        /** @var RoomDocumentRepository */
         $repository = $dm->getRepository(Room::class);
         $this->assertSame(2, $repository->countGuestWithNameLike('Adorable Advaark', $room->getId()));
         $this->assertSame(0, $repository->countGuestWithNameLike('Adorable Advaark', 'room that does not exist'));
@@ -70,7 +70,7 @@ class RoomRepositoryTest extends KernelTestCase
         $dm->persist($room);
         $dm->flush();
 
-        /** @var RoomRepository */
+        /** @var RoomDocumentRepository */
         $repository = $dm->getRepository(Room::class);
         $updatedRoom = $repository->deleteSong($room->getId(), $song->getId());
 

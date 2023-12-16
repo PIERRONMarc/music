@@ -2,7 +2,7 @@
 
 namespace App\Tests\Unit\Sercice\RandomNameGenerator\RoomName;
 
-use App\Repository\RoomRepository;
+use App\Repository\RoomDocumentRepository;
 use App\Service\Randomizer\RandomizerInterface;
 use App\Service\RandomNameGenerator\RoomName\RandomRoomNameGenerator;
 use Doctrine\ODM\MongoDB\DocumentManager;
@@ -15,7 +15,7 @@ class RandomRoomGeneratorTest extends TestCase
         $randomizer = $this->createMock(RandomizerInterface::class);
         $randomizer->method('mtRand')->willReturn(0);
 
-        $roomRepository = $this->createMock(RoomRepository::class);
+        $roomRepository = $this->createMock(RoomDocumentRepository::class);
         $roomRepository->method('countRoomWithNameLike')->willReturn(0);
 
         $documentManager = $this->createMock(DocumentManager::class);
@@ -31,7 +31,7 @@ class RandomRoomGeneratorTest extends TestCase
         $randomizer = $this->createMock(RandomizerInterface::class);
         $randomizer->method('mtRand')->willReturn(0);
 
-        $roomRepository = $this->createMock(RoomRepository::class);
+        $roomRepository = $this->createMock(RoomDocumentRepository::class);
         $roomRepository->method('countRoomWithNameLike')->willReturn(1);
 
         $documentManager = $this->createMock(DocumentManager::class);

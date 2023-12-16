@@ -2,14 +2,14 @@
 
 namespace App\Document;
 
-use App\Repository\RoomRepository;
+use App\Repository\RoomDocumentRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
- * @MongoDB\Document(collection="rooms", repositoryClass=RoomRepository::class)
+ * @MongoDB\Document(collection="rooms", repositoryClass=RoomDocumentRepository::class)
  */
 class Room
 {

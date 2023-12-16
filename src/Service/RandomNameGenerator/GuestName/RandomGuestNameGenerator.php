@@ -3,7 +3,7 @@
 namespace App\Service\RandomNameGenerator\GuestName;
 
 use App\Document\Room;
-use App\Repository\RoomRepository;
+use App\Repository\RoomDocumentRepository;
 use App\Service\Randomizer\RandomizerInterface;
 use Doctrine\ODM\MongoDB\DocumentManager;
 
@@ -19,14 +19,14 @@ class RandomGuestNameGenerator
      */
     private array $nouns;
 
-    private RoomRepository $roomRepository;
+    private RoomDocumentRepository $roomRepository;
 
     private RandomizerInterface $randomizer;
 
     public function __construct(RandomizerInterface $randomizer, DocumentManager $documentManager)
     {
         $this->randomizer = $randomizer;
-        /** @var RoomRepository */
+        /** @var RoomDocumentRepository */
         $roomRepository = $documentManager->getRepository(Room::class);
         $this->roomRepository = $roomRepository;
         $this->adjectives = file(__DIR__.'/adjectives.txt', \FILE_IGNORE_NEW_LINES);

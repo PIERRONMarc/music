@@ -12,7 +12,7 @@ use App\Mercure\Message\AddSongMessage;
 use App\Mercure\Message\DeleteSongMessage;
 use App\Mercure\Message\NextSongMessage;
 use App\Mercure\Message\UpdateCurrentSongMessage;
-use App\Repository\RoomRepository;
+use App\Repository\RoomDocumentRepository;
 use App\Service\Jwt\TokenValidator;
 use App\Service\Room\RoomAuthorization;
 use App\Service\SongProvider\Exception\SongNotFoundException;
@@ -161,7 +161,7 @@ class SongController extends AbstractController
             throw new AccessDeniedHttpException("You don't have the permission to delete song in this room");
         }
 
-        /** @var RoomRepository $roomRepository */
+        /** @var RoomDocumentRepository $roomRepository */
         $roomRepository = $documentManager->getRepository(Room::class);
         $roomRepository->deleteSong($roomId, $songId);
 

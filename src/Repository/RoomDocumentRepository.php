@@ -9,7 +9,7 @@ use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\Regex;
 use MongoDB\Driver\Cursor;
 
-class RoomRepository extends DocumentRepository
+class RoomDocumentRepository extends DocumentRepository
 {
     /**
      * Count the number of rooms that match (partially or not) the given room name.

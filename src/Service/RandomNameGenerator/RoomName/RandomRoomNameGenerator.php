@@ -3,7 +3,7 @@
 namespace App\Service\RandomNameGenerator\RoomName;
 
 use App\Document\Room;
-use App\Repository\RoomRepository;
+use App\Repository\RoomDocumentRepository;
 use App\Service\Randomizer\RandomizerInterface;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\MongoDBException;
@@ -12,7 +12,7 @@ class RandomRoomNameGenerator
 {
     private RandomizerInterface $randomizer;
 
-    private RoomRepository $roomRepository;
+    private RoomDocumentRepository $roomRepository;
 
     /**
      * @var string[]
@@ -22,7 +22,7 @@ class RandomRoomNameGenerator
     public function __construct(RandomizerInterface $randomizer, DocumentManager $documentManager)
     {
         $this->randomizer = $randomizer;
-        /** @var RoomRepository */
+        /** @var RoomDocumentRepository $roomRepository */
         $roomRepository = $documentManager->getRepository(Room::class);
         $this->roomRepository = $roomRepository;
         $this->venues = file(__DIR__.'/venues.txt', \FILE_IGNORE_NEW_LINES);
