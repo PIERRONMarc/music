@@ -2,9 +2,9 @@
 
 namespace App\Controller;
 
-use App\Document\Guest;
-use App\Document\Room;
-use App\Document\Song;
+use App\Document\Guest as GuestDocument;
+use App\Document\Room as RoomDocument;
+use App\Entity\Song;
 use App\Exception\FormHttpException;
 use App\Form\SongType;
 use App\Form\UpdateCurrentSongType;
@@ -13,12 +13,13 @@ use App\Mercure\Message\DeleteSongMessage;
 use App\Mercure\Message\NextSongMessage;
 use App\Mercure\Message\UpdateCurrentSongMessage;
 use App\Repository\RoomDocumentRepository;
+use App\Repository\RoomRepository;
 use App\Service\Jwt\TokenValidator;
 use App\Service\Room\RoomAuthorization;
 use App\Service\SongProvider\Exception\SongNotFoundException;
 use App\Service\SongProvider\SongProviderInterface;
 use Doctrine\ODM\MongoDB\DocumentManager;
-use http\Exception\RuntimeException;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,7 +34,8 @@ class SongController extends AbstractController
     #[Route('room/{id}/song', name: 'add_song', methods: ['POST', 'OPTIONS'])]
     public function addSong(
         string $id,
-        DocumentManager $dm,
+        EntityManagerInterface $entityManager,
+        RoomRepository $roomRepository,
         Request $request,
         TokenValidator $tokenValidator,
         RoomAuthorization $roomAuthorization,
@@ -51,8 +53,7 @@ class SongController extends AbstractController
 
         $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'guestName']);
 
-        /** @var Room|null $room */
-        $room = $dm->getRepository(Room::class)->findOneBy(['id' => str_replace('-', '', $id)]);
+        $room = $roomRepository->findOneById($id);
         if (!$room) {
             throw new NotFoundHttpException('The room does not exist');
         }
@@ -62,7 +63,7 @@ class SongController extends AbstractController
         }
 
         if (!$roomAuthorization->guestIsGranted(
-            Guest::ROLE_ADMIN,
+            GuestDocument::ROLE_ADMIN,
             $payload['guestName'],
             $room->getGuests()->toArray()
         )) {
@@ -86,7 +87,7 @@ class SongController extends AbstractController
         } catch (SongNotFoundException $exception) {
             throw new NotFoundHttpException('Song not found');
         } catch (\Exception $exception) {
-            throw new RuntimeException('Searching the song failed');
+            throw new \RuntimeException('Searching the song failed');
         }
 
         $song = (new Song())
@@ -100,7 +101,7 @@ class SongController extends AbstractController
             $room->addSong($song);
         }
 
-        $dm->flush();
+        $entityManager->flush();
 
         if ($songDTO) {
             $message = new AddSongMessage(
@@ -143,8 +144,8 @@ class SongController extends AbstractController
 
         $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'guestName']);
 
-        /** @var Room|null $room */
-        $room = $documentManager->getRepository(Room::class)->findOneBy(['id' => str_replace('-', '', $roomId)]);
+        /** @var RoomDocument|null $room */
+        $room = $documentManager->getRepository(RoomDocument::class)->findOneBy(['id' => str_replace('-', '', $roomId)]);
         if (!$room) {
             throw new NotFoundHttpException('The room does not exist');
         }
@@ -154,7 +155,7 @@ class SongController extends AbstractController
         }
 
         if ($roomAuthorization->guestIsGranted(
-            Guest::ROLE_GUEST,
+            GuestDocument::ROLE_GUEST,
             $payload['guestName'],
             $room->getGuests()->toArray()
         )) {
@@ -162,7 +163,7 @@ class SongController extends AbstractController
         }
 
         /** @var RoomDocumentRepository $roomRepository */
-        $roomRepository = $documentManager->getRepository(Room::class);
+        $roomRepository = $documentManager->getRepository(RoomDocument::class);
         $roomRepository->deleteSong($roomId, $songId);
 
         $message = new DeleteSongMessage(
@@ -194,8 +195,8 @@ class SongController extends AbstractController
 
         $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'guestName']);
 
-        /** @var Room|null $room */
-        $room = $documentManager->getRepository(Room::class)->findOneBy(['id' => str_replace('-', '', $roomId)]);
+        /** @var RoomDocument|null $room */
+        $room = $documentManager->getRepository(RoomDocument::class)->findOneBy(['id' => str_replace('-', '', $roomId)]);
         if (!$room) {
             throw new NotFoundHttpException('The room does not exist');
         }
@@ -205,7 +206,7 @@ class SongController extends AbstractController
         }
 
         if ($roomAuthorization->guestIsGranted(
-            Guest::ROLE_GUEST,
+            GuestDocument::ROLE_GUEST,
             $payload['guestName'],
             $room->getGuests()->toArray()
         )) {
@@ -242,7 +243,7 @@ class SongController extends AbstractController
         $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
         $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'guestName']);
 
-        $room = $documentManager->getRepository(Room::class)->findOneBy(['id' => $roomId]);
+        $room = $documentManager->getRepository(RoomDocument::class)->findOneBy(['id' => $roomId]);
         if (!$room) {
             throw new NotFoundHttpException('The room does not exist');
         }
@@ -252,7 +253,7 @@ class SongController extends AbstractController
         }
 
         if ($roomAuthorization->guestIsGranted(
-            Guest::ROLE_GUEST,
+            GuestDocument::ROLE_GUEST,
             $payload['guestName'],
             $room->getGuests()->toArray()
         )) {

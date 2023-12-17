@@ -55,7 +55,7 @@ class Song
         return $this;
     }
 
-    public function isIsPaused(): bool
+    public function isPaused(): bool
     {
         return $this->isPaused;
     }

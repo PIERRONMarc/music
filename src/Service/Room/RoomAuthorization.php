@@ -2,7 +2,7 @@
 
 namespace App\Service\Room;
 
-use App\Document\Guest;
+use App\Entity\Guest;
 
 class RoomAuthorization
 {

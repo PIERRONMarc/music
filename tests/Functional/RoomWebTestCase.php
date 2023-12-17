@@ -43,7 +43,7 @@ abstract class RoomWebTestCase extends WebTestCase
         return $room;
     }
 
-    protected function createRoom(): Room
+    protected function createRoom(bool $withCurrentSong = false): Room
     {
         $tokenFactory = static::getContainer()->get(TokenFactory::class);
         $host = (new Guest())
@@ -55,6 +55,17 @@ abstract class RoomWebTestCase extends WebTestCase
             ->addGuest($host)
             ->setName('Red rocks')
         ;
+
+        if ($withCurrentSong) {
+            $song = (new Song())
+                ->setTitle('title')
+                ->setAuthor('author')
+                ->setLengthInSeconds(100)
+                ->setUrl('url')
+            ;
+            $room->setCurrentSong($song);
+        }
+
         $this->getEntityManager()->persist($room);
         $this->getEntityManager()->flush();
 
