@@ -165,14 +165,15 @@ class SongControllerTest extends RoomWebTestCase
 
     public function testCurrentSongIsUpdated(): void
     {
-        $room = $this->createRoomDocument();
-        $song = $this->addSongDocument($room, true);
+        $room = $this->createRoom();
+        $song = $this->addSong($room, true);
 
-        $this->client->jsonRequest(Request::METHOD_PATCH, '/room/'.$room->getId().'/current-song', [
-            'isPaused' => true,
-        ], [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
-        ]);
+        $this->client->jsonRequest(
+            Request::METHOD_PATCH,
+            sprintf('/room/%s/current-song', $room->getId()->toRfc4122()),
+            ['isPaused' => true],
+            ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $room->getHost()->getToken())],
+        );
         $currentSong = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertSame($song->getUrl(), $currentSong['url']);
@@ -181,13 +182,14 @@ class SongControllerTest extends RoomWebTestCase
 
     public function testUpdateCurrentSongWhenNoCurrentSong(): void
     {
-        $room = $this->createRoomDocument();
+        $room = $this->createRoom();
 
-        $this->client->jsonRequest(Request::METHOD_PATCH, '/room/'.$room->getId().'/current-song', [
-            'isPaused' => true,
-        ], [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
-        ]);
+        $this->client->jsonRequest(
+            Request::METHOD_PATCH,
+            sprintf('/room/%s/current-song', $room->getId()->toRfc4122()),
+            ['isPaused' => true],
+            ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $room->getHost()->getToken())],
+        );
         $data = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertSame('There is no current song', $data['title']);
@@ -201,12 +203,15 @@ class SongControllerTest extends RoomWebTestCase
      */
     public function testUpdateCurrentSongValidation(array $payload, string $violationMessage): void
     {
-        $room = $this->createRoomDocument();
-        $this->addSongDocument($room, true);
+        $room = $this->createRoom();
+        $this->addSong($room, true);
 
-        $this->client->jsonRequest(Request::METHOD_PATCH, '/room/'.$room->getId().'/current-song', $payload, [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
-        ]);
+        $this->client->jsonRequest(
+            Request::METHOD_PATCH,
+            sprintf('/room/%s/current-song', $room->getId()->toRfc4122()),
+            $payload,
+            ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $room->getHost()->getToken())],
+        );
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertSame($violationMessage, $data['violations'][0]['message']);

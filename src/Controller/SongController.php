@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Document\Guest as GuestDocument;
 use App\Document\Room as RoomDocument;
+use App\Entity\Guest;
 use App\Entity\Song;
 use App\Exception\FormHttpException;
 use App\Form\SongType;
@@ -183,7 +184,8 @@ class SongController extends AbstractController
         string $roomId,
         TokenValidator $tokenValidator,
         Request $request,
-        DocumentManager $documentManager,
+        EntityManagerInterface $entityManager,
+        RoomRepository $roomRepository,
         RoomAuthorization $roomAuthorization,
         HubInterface $hub,
     ): Response {
@@ -198,8 +200,7 @@ class SongController extends AbstractController
 
         $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'guestName']);
 
-        /** @var RoomDocument|null $room */
-        $room = $documentManager->getRepository(RoomDocument::class)->findOneBy(['id' => str_replace('-', '', $roomId)]);
+        $room = $roomRepository->findOneById($roomId);
         if (!$room) {
             throw new NotFoundHttpException('The room does not exist');
         }
@@ -209,7 +210,7 @@ class SongController extends AbstractController
         }
 
         if ($roomAuthorization->guestIsGranted(
-            GuestDocument::ROLE_GUEST,
+            Guest::ROLE_GUEST,
             $payload['guestName'],
             $room->getGuests()->toArray()
         )) {
@@ -221,12 +222,12 @@ class SongController extends AbstractController
         }
 
         $room->getCurrentSong()->setIsPaused($request->request->get('isPaused'));
-        $documentManager->flush();
+        $entityManager->flush();
 
         $message = new UpdateCurrentSongMessage(
             $room->getId(),
             $room->getCurrentSong()->getUrl(),
-            $room->getCurrentSong()->getIsPaused()
+            $room->getCurrentSong()->isPaused()
         );
 
         $hub->publish($message->buildUpdate());
