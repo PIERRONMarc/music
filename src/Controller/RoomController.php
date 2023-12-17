@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Document\Room as RoomDocument;
 use App\DTO\JoinRoomDTO;
 use App\Entity\Guest;
 use App\Entity\Room;
@@ -16,7 +15,6 @@ use App\Service\Jwt\TokenFactory;
 use App\Service\Jwt\TokenValidator;
 use App\Service\RandomNameGenerator\GuestName\RandomGuestNameGenerator;
 use App\Service\RandomNameGenerator\RoomName\RandomRoomNameGenerator;
-use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -60,7 +58,7 @@ class RoomController extends AbstractController
         ])->toString());
         $room->setHost($host);
 
-        $message = new CreateRoomMessage($room->getId(), $room->getName());
+        $message = new CreateRoomMessage($room->getId()->toRfc4122(), $room->getName());
         $hub->publish($message->buildUpdate());
 
         return $this->json($room, Response::HTTP_CREATED);
@@ -93,13 +91,13 @@ class RoomController extends AbstractController
             throw new NotFoundHttpException(sprintf('The room %s does not exist.', $id));
         }
 
-        $guestName = $randomGuestNameGenerator->getNameForRoom($room->getId());
+        $guestName = $randomGuestNameGenerator->getNameForRoom($room->getId()->toRfc4122());
         $guest = (new Guest())
             ->setName($guestName)
             ->setToken($tokenFactory->createToken([
                 'claims' => [
                     'guestName' => $guestName,
-                    'roomId' => $room->getId(),
+                    'roomId' => $room->getId()->toRfc4122(),
                 ],
             ])->toString())
         ;
@@ -108,7 +106,7 @@ class RoomController extends AbstractController
         $entityManager->flush();
 
         $message = new GuestJoinMessage(
-            $room->getId(),
+            $room->getId()->toRfc4122(),
             $guest->getName(),
             $guest->getRole()
         );
@@ -124,7 +122,7 @@ class RoomController extends AbstractController
     public function grantRoleOnGuest(
         string $roomId,
         string $guestName,
-        DocumentManager $documentManager,
+        RoomRepository $roomRepository,
         Request $request,
         TokenValidator $tokenValidator,
         HubInterface $hub
@@ -141,12 +139,12 @@ class RoomController extends AbstractController
         $role = $request->request->get('role');
         $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'guestName']);
 
-        $room = $documentManager->getRepository(RoomDocument::class)->findOneBy(['id' => $roomId]);
+        $room = $roomRepository->findOneById($roomId);
         if (!$room) {
             throw new NotFoundHttpException('The room does not exist');
         }
 
-        if ($payload['roomId'] != $room->getId()) {
+        if ($payload['roomId'] != $room->getId()->toRfc4122()) {
             throw new AccessDeniedHttpException('JWT Token does not belong to this room');
         }
 
@@ -171,7 +169,7 @@ class RoomController extends AbstractController
         }
 
         $message = new UpdateGuestMessage(
-            $room->getId(),
+            $room->getId()->toRfc4122(),
             $guestName,
             $role
         );

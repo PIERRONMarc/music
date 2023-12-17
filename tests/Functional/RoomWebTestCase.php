@@ -69,12 +69,12 @@ abstract class RoomWebTestCase extends WebTestCase
         return $room;
     }
 
-    protected function joinRoom(RoomDocument $room): GuestDocument
+    protected function joinRoom(Room $room): Guest
     {
         $tokenFactory = static::getContainer()->get(TokenFactory::class);
-        $room = $this->getDocumentManager()->getRepository(RoomDocument::class)->findOneBy(['id' => $room->getId()]);
+        $room = $this->getEntityManager()->getRepository(Room::class)->findOneById($room->getId()->toRfc4122());
 
-        $guest = (new GuestDocument())
+        $guest = (new Guest())
             ->setName('Grumpy cat')
             ->setToken($tokenFactory->createToken([
                 'claims' => [
@@ -82,12 +82,12 @@ abstract class RoomWebTestCase extends WebTestCase
                     'roomId' => $room->getId(),
                 ],
             ])->toString())
-            ->setRole(GuestDocument::ROLE_GUEST)
+            ->setRole(Guest::ROLE_GUEST)
         ;
         $room->addGuest($guest);
 
-        $this->getDocumentManager()->persist($room);
-        $this->getDocumentManager()->flush();
+        $this->getEntityManager()->persist($room);
+        $this->getEntityManager()->flush();
 
         return $guest;
     }
