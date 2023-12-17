@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: RoomRepository::class)]
@@ -17,9 +18,11 @@ class Room
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
+    #[Groups(groups: ['get_all_room'])]
     private Uuid $id;
 
     #[ORM\Column(length: 255)]
+    #[Groups(groups: ['get_all_room'])]
     private string $name;
 
     #[ORM\OneToOne(cascade: ['persist', 'remove'])]
