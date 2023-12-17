@@ -2,8 +2,6 @@
 
 namespace App\Controller;
 
-use App\Document\Guest as GuestDocument;
-use App\Document\Room as RoomDocument;
 use App\Entity\Guest;
 use App\Entity\Song;
 use App\Exception\FormHttpException;
@@ -64,7 +62,7 @@ class SongController extends AbstractController
         }
 
         if (!$roomAuthorization->guestIsGranted(
-            GuestDocument::ROLE_ADMIN,
+            Guest::ROLE_ADMIN,
             $payload['guestName'],
             $room->getGuests()->toArray()
         )) {
@@ -158,7 +156,7 @@ class SongController extends AbstractController
         }
 
         if ($roomAuthorization->guestIsGranted(
-            GuestDocument::ROLE_GUEST,
+            Guest::ROLE_GUEST,
             $payload['guestName'],
             $room->getGuests()->toArray()
         )) {
@@ -239,6 +237,8 @@ class SongController extends AbstractController
     public function goToNextSong(
         string $roomId,
         DocumentManager $documentManager,
+        EntityManagerInterface $entityManager,
+        RoomRepository $roomRepository,
         TokenValidator $tokenValidator,
         Request $request,
         RoomAuthorization $roomAuthorization,
@@ -247,7 +247,7 @@ class SongController extends AbstractController
         $jwt = $tokenValidator->validateAuthorizationHeaderAndGetToken($request->headers->get('Authorization'));
         $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'guestName']);
 
-        $room = $documentManager->getRepository(RoomDocument::class)->findOneBy(['id' => $roomId]);
+        $room = $roomRepository->findOneById($roomId);
         if (!$room) {
             throw new NotFoundHttpException('The room does not exist');
         }
@@ -257,7 +257,7 @@ class SongController extends AbstractController
         }
 
         if ($roomAuthorization->guestIsGranted(
-            GuestDocument::ROLE_GUEST,
+            Guest::ROLE_GUEST,
             $payload['guestName'],
             $room->getGuests()->toArray()
         )) {
@@ -269,10 +269,10 @@ class SongController extends AbstractController
         } else {
             $room->setCurrentSong($room->getSongs()->first());
             $room->removeSong($room->getSongs()->first());
+            $room->getCurrentSong()->setRoom($room);
         }
 
-        $documentManager->persist($room);
-        $documentManager->flush();
+        $entityManager->flush();
 
         $message = new NextSongMessage($room->getId());
 

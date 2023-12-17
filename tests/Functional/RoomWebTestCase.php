@@ -2,14 +2,10 @@
 
 namespace App\Tests\Functional;
 
-use App\Document\Guest as GuestDocument;
-use App\Document\Room as RoomDocument;
-use App\Document\Song as SongDocument;
 use App\Entity\Guest;
 use App\Entity\Room;
 use App\Entity\Song;
 use App\Service\Jwt\TokenFactory;
-use Doctrine\ODM\MongoDB\MongoDBException;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -17,38 +13,12 @@ abstract class RoomWebTestCase extends WebTestCase
 {
     use DatabaseTrait;
 
-    protected function createRoomDocument(): RoomDocument
-    {
-        $tokenFactory = static::getContainer()->get(TokenFactory::class);
-        $host = (new GuestDocument())
-            ->setName('Angry ape')
-            ->setRole(Guest::ROLE_ADMIN)
-        ;
-        $room = (new RoomDocument())
-            ->setHost($host)
-            ->addGuest($host)
-            ->setName('Red rocks')
-        ;
-        $this->getDocumentManager()->persist($room);
-        $this->getDocumentManager()->flush();
-
-        $host->setToken($tokenFactory->createToken([
-            'claims' => [
-                'guestName' => 'Angry ape',
-                'roomId' => $room->getId(),
-            ],
-        ])->toString());
-        $room->setHost($host);
-
-        return $room;
-    }
-
     protected function createRoom(bool $withCurrentSong = false): Room
     {
         $tokenFactory = static::getContainer()->get(TokenFactory::class);
         $host = (new Guest())
             ->setName('Angry ape')
-            ->setRole(GuestDocument::ROLE_ADMIN)
+            ->setRole(Guest::ROLE_ADMIN)
         ;
         $room = (new Room())
             ->setHost($host)
@@ -101,34 +71,6 @@ abstract class RoomWebTestCase extends WebTestCase
         $this->getEntityManager()->flush();
 
         return $guest;
-    }
-
-    /**
-     * @param mixed[] $options
-     *
-     * @throws MongoDBException
-     */
-    protected function addSongDocument(RoomDocument $room, bool $isCurrentSong = false, array $options = []): SongDocument
-    {
-        $resolver = new OptionsResolver();
-        $resolver->setDefaults([
-            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        ]);
-        $options = $resolver->resolve($options);
-
-        $song = (new SongDocument())->setUrl($options['url']);
-        $room = $this->getDocumentManager()->getRepository(RoomDocument::class)->findOneBy(['id' => $room->getId()]);
-
-        if ($isCurrentSong) {
-            $room->setCurrentSong($song);
-        } else {
-            $room->addSong($song);
-        }
-
-        $this->getDocumentManager()->persist($room);
-        $this->getDocumentManager()->flush();
-
-        return $song;
     }
 
     /**

@@ -32,10 +32,10 @@ class Room
     #[ORM\OneToOne(cascade: ['persist', 'remove'])]
     private ?Song $currentSong = null;
 
-    #[ORM\OneToMany(mappedBy: 'room', targetEntity: Song::class, cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'room', targetEntity: Song::class, cascade: ['persist'])]
     private Collection $songs;
 
-    #[ORM\OneToMany(mappedBy: 'room', targetEntity: Guest::class, cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'room', targetEntity: Guest::class, cascade: ['persist'])]
     private Collection $guests;
 
     public function __construct()
@@ -81,7 +81,7 @@ class Room
     public function setCurrentSong(?Song $currentSong): static
     {
         $this->currentSong = $currentSong;
-        $currentSong->setRoom($this);
+        $currentSong?->setRoom($this);
 
         return $this;
     }

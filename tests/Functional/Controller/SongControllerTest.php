@@ -2,7 +2,6 @@
 
 namespace App\Tests\Functional\Controller;
 
-use App\Document\Room as RoomDocument;
 use App\Entity\Room;
 use App\Tests\Functional\RoomWebTestCase;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -114,12 +113,15 @@ class SongControllerTest extends RoomWebTestCase
      */
     public function testAddSongValidation(array $payload, string $violationMessage): void
     {
-        $room = $this->createRoomDocument();
+        $room = $this->createRoom();
 
         // song is not from YouTube
-        $this->client->jsonRequest(Request::METHOD_POST, '/room/'.$room->getId().'/song', $payload, [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
-        ]);
+        $this->client->jsonRequest(
+            Request::METHOD_POST,
+            sprintf('/room/%s/song', $room->getId()->toRfc4122()),
+            $payload,
+            ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $room->getHost()->getToken())],
+        );
         $data = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
@@ -233,31 +235,36 @@ class SongControllerTest extends RoomWebTestCase
 
     public function testGoToTheNextSong(): void
     {
-        $room = $this->createRoomDocument();
-        $this->addSongDocument($room, true);
-        $nextSong = $this->addSongDocument($room, false, [
+        $room = $this->createRoom();
+        $this->addSong($room, true);
+        $nextSong = $this->addSong($room, false, [
             'url' => 'https://www.youtube.com/watch?v=pAgnJDJN4VA&ab_channel=acdcVEVO',
         ]);
 
-        $this->client->jsonRequest(Request::METHOD_GET, '/room/'.$room->getId().'/next-song', [], [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
-        ]);
+        $this->client->jsonRequest(
+            Request::METHOD_GET,
+            sprintf('/room/%s/next-song', $room->getId()->toRfc4122()),
+            [],
+            ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $room->getHost()->getToken())],
+        );
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertSame($nextSong->getUrl(), $data['url']);
         $this->assertFalse($data['isPaused']);
 
-        // assert playlist is updated
-        $updatedRoom = $this->getDocumentManager()->getRepository(RoomDocument::class)->findOneBy(['id' => $room->getId()]);
+        $updatedRoom = $this->getEntityManager()->getRepository(Room::class)->findOneById($room->getId()->toRfc4122());
         $this->assertEmpty($updatedRoom->getSongs());
     }
 
     public function testGoToNextSongWhenNoMoreSongs(): void
     {
-        $room = $this->createRoomDocument();
+        $room = $this->createRoom();
 
-        $this->client->jsonRequest(Request::METHOD_GET, '/room/'.$room->getId().'/next-song', [], [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
-        ]);
+        $this->client->jsonRequest(
+            Request::METHOD_GET,
+            sprintf('/room/%s/next-song', $room->getId()->toRfc4122()),
+            [],
+            ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $room->getHost()->getToken())],
+        );
         $data = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertResponseIsSuccessful();
