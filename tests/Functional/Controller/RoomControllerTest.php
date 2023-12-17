@@ -64,7 +64,7 @@ class RoomControllerTest extends RoomWebTestCase
 
     public function testJoinRoomAsAGuest(): void
     {
-        $room = $this->createRoomDocument();
+        $room = $this->createRoom();
         $song = $this->addSong($room);
         $currentSong = $this->addSong($room, true);
 
@@ -77,21 +77,21 @@ class RoomControllerTest extends RoomWebTestCase
         $this->assertIsString($data['guest']['token']);
         $this->assertIsString($data['room']['id']);
         $this->assertIsString($data['room']['name']);
-        $this->assertSame($song->getId(), $data['room']['songs'][0]['id']);
+        $this->assertSame($song->getId()->toRfc4122(), $data['room']['songs'][0]['id']);
         $this->assertSame($song->getUrl(), $data['room']['songs'][0]['url']);
         $this->assertSame($currentSong->getUrl(), $data['room']['currentSong']['url']);
-        $this->assertSame($currentSong->getId(), $data['room']['currentSong']['id']);
+        $this->assertSame($currentSong->getId()->toRfc4122(), $data['room']['currentSong']['id']);
         $this->assertFalse($data['room']['currentSong']['isPaused']);
         $this->assertSame($data['guest']['name'], $data['room']['guests'][1]['name'], 'Actual guest is not added to the guest list of the room');
     }
 
     public function testJoinARoomThatDoesntExist(): void
     {
-        $this->client->jsonRequest(Request::METHOD_GET, '/join/15686e63b72b3b20aaecd3186ff2c42a');
+        $this->client->jsonRequest(Request::METHOD_GET, '/join/5f897ff3-4f86-406e-bac0-e8e802ddb45a');
         $data = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertSame(404, $data['status']);
-        $this->assertSame('The room 15686e63b72b3b20aaecd3186ff2c42a does not exist.', $data['title']);
+        $this->assertSame('The room 5f897ff3-4f86-406e-bac0-e8e802ddb45a does not exist.', $data['title']);
     }
 
     public function testGrantRoleOnGuest(): void

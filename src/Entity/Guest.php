@@ -25,7 +25,7 @@ class Guest
     private string $name;
 
     #[ORM\Column(length: 255)]
-    private string $role;
+    private string $role = self::ROLE_GUEST;
 
     private string $token;
 

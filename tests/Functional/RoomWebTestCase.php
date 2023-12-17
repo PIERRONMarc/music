@@ -7,6 +7,7 @@ use App\Document\Room as RoomDocument;
 use App\Document\Song as SongDocument;
 use App\Entity\Guest;
 use App\Entity\Room;
+use App\Entity\Song;
 use App\Service\Jwt\TokenFactory;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -96,7 +97,7 @@ abstract class RoomWebTestCase extends WebTestCase
      *
      * @throws MongoDBException
      */
-    protected function addSong(RoomDocument $room, bool $isCurrentSong = false, array $options = []): SongDocument
+    protected function addSongDocument(RoomDocument $room, bool $isCurrentSong = false, array $options = []): SongDocument
     {
         $resolver = new OptionsResolver();
         $resolver->setDefaults([
@@ -115,6 +116,37 @@ abstract class RoomWebTestCase extends WebTestCase
 
         $this->getDocumentManager()->persist($room);
         $this->getDocumentManager()->flush();
+
+        return $song;
+    }
+
+    /**
+     * @param mixed[] $options
+     */
+    protected function addSong(Room $room, bool $isCurrentSong = false, array $options = []): Song
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setDefaults([
+            'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ]);
+        $options = $resolver->resolve($options);
+
+        $song = (new Song())
+            ->setUrl($options['url'])
+            ->setAuthor('author')
+            ->setTitle('title')
+            ->setLengthInSeconds(100)
+        ;
+        $room = $this->getEntityManager()->getRepository(Room::class)->findOneById($room->getId()->toRfc4122());
+
+        if ($isCurrentSong) {
+            $room->setCurrentSong($song);
+        } else {
+            $room->addSong($song);
+        }
+
+        $this->getEntityManager()->persist($room);
+        $this->getEntityManager()->flush();
 
         return $song;
     }

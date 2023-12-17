@@ -2,8 +2,8 @@
 
 namespace App\DTO;
 
-use App\Document\Guest;
-use App\Document\Room;
+use App\Entity\Guest;
+use App\Entity\Room;
 
 class JoinRoomDTO
 {

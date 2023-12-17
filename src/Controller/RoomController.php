@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Document\Guest as GuestDocument;
 use App\Document\Room as RoomDocument;
 use App\DTO\JoinRoomDTO;
 use App\Entity\Guest;
@@ -82,19 +81,20 @@ class RoomController extends AbstractController
     #[Route('/join/{id}', name: 'join_room', methods: ['GET', 'OPTIONS'])]
     public function joinRoom(
         string $id,
-        DocumentManager $dm,
+        EntityManagerInterface $entityManager,
+        RoomRepository $roomRepository,
         RandomGuestNameGenerator $randomGuestNameGenerator,
         TokenFactory $tokenFactory,
         HubInterface $hub
     ): Response {
-        $room = $dm->getRepository(RoomDocument::class)->findOneBy(['id' => str_replace('-', '', $id)]);
+        $room = $roomRepository->findOneById($id);
 
         if (!$room) {
-            throw new NotFoundHttpException('The room '.$id.' does not exist.');
+            throw new NotFoundHttpException(sprintf('The room %s does not exist.', $id));
         }
 
         $guestName = $randomGuestNameGenerator->getNameForRoom($room->getId());
-        $guest = (new GuestDocument())
+        $guest = (new Guest())
             ->setName($guestName)
             ->setToken($tokenFactory->createToken([
                 'claims' => [
@@ -105,7 +105,7 @@ class RoomController extends AbstractController
         ;
 
         $room->addGuest($guest);
-        $dm->flush();
+        $entityManager->flush();
 
         $message = new GuestJoinMessage(
             $room->getId(),

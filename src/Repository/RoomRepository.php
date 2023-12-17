@@ -20,4 +20,9 @@ class RoomRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Room::class);
     }
+
+    public function findOneById(string $id): ?Room
+    {
+        return $this->findOneBy(['id' => $id]);
+    }
 }
