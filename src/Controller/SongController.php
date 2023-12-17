@@ -12,8 +12,8 @@ use App\Mercure\Message\AddSongMessage;
 use App\Mercure\Message\DeleteSongMessage;
 use App\Mercure\Message\NextSongMessage;
 use App\Mercure\Message\UpdateCurrentSongMessage;
-use App\Repository\RoomDocumentRepository;
 use App\Repository\RoomRepository;
+use App\Repository\SongRepository;
 use App\Service\Jwt\TokenValidator;
 use App\Service\Room\RoomAuthorization;
 use App\Service\SongProvider\Exception\SongNotFoundException;
@@ -132,7 +132,9 @@ class SongController extends AbstractController
 
     #[Route('room/{roomId}/song/{songId}', name: 'delete_song', methods: ['DELETE'])]
     public function deleteSong(
-        DocumentManager $documentManager,
+        EntityManagerInterface $entityManager,
+        RoomRepository $roomRepository,
+        SongRepository $songRepository,
         string $roomId,
         string $songId,
         TokenValidator $tokenValidator,
@@ -144,8 +146,8 @@ class SongController extends AbstractController
 
         $payload = $tokenValidator->validateAndGetPayload($jwt, ['roomId', 'guestName']);
 
-        /** @var RoomDocument|null $room */
-        $room = $documentManager->getRepository(RoomDocument::class)->findOneBy(['id' => str_replace('-', '', $roomId)]);
+        $room = $roomRepository->findOneById($roomId);
+
         if (!$room) {
             throw new NotFoundHttpException('The room does not exist');
         }
@@ -162,9 +164,10 @@ class SongController extends AbstractController
             throw new AccessDeniedHttpException("You don't have the permission to delete song in this room");
         }
 
-        /** @var RoomDocumentRepository $roomRepository */
-        $roomRepository = $documentManager->getRepository(RoomDocument::class);
-        $roomRepository->deleteSong($roomId, $songId);
+        $song = $songRepository->findOneById($songId);
+
+        $entityManager->remove($song);
+        $entityManager->flush();
 
         $message = new DeleteSongMessage(
             $room->getId(),

@@ -149,15 +149,17 @@ class SongControllerTest extends RoomWebTestCase
 
     public function testDeleteSong(): void
     {
-        $room = $this->createRoomDocument();
-        $song = $this->addSongDocument($room);
+        $room = $this->createRoom();
+        $song = $this->addSong($room);
 
-        $this->client->jsonRequest(Request::METHOD_DELETE, '/room/'.$room->getId().'/song/'.$song->getId(), [], [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
-        ]);
+        $this->client->jsonRequest(
+            Request::METHOD_DELETE,
+            sprintf('/room/%s/song/%s', $room->getId()->toRfc4122(), $song->getId()),
+            [],
+            ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $room->getHost()->getToken())]);
         $this->assertResponseStatusCodeSame(204);
 
-        $updatedRoom = $this->getDocumentManager()->getRepository(RoomDocument::class)->findOneBy(['id' => $room->getId()]);
+        $updatedRoom = $this->getEntityManager()->getRepository(Room::class)->findOneById($room->getId()->toRfc4122());
         $this->assertEmpty($updatedRoom->getSongs());
     }
 
