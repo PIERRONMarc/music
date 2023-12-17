@@ -42,6 +42,7 @@ class RoomControllerTest extends RoomWebTestCase
         $this->client->request(Request::METHOD_GET, '/room');
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertSame($room->getId()->toRfc4122(), $data[0]['id']);
         $this->assertSame($room->getName(), $data[0]['name']);
     }
 
@@ -63,7 +64,7 @@ class RoomControllerTest extends RoomWebTestCase
 
     public function testJoinRoomAsAGuest(): void
     {
-        $room = $this->createRoom();
+        $room = $this->createRoomDocument();
         $song = $this->addSong($room);
         $currentSong = $this->addSong($room, true);
 
@@ -95,7 +96,7 @@ class RoomControllerTest extends RoomWebTestCase
 
     public function testGrantRoleOnGuest(): void
     {
-        $room = $this->createRoom();
+        $room = $this->createRoomDocument();
         $guest = $this->joinRoom($room);
 
         $this->client->jsonRequest(Request::METHOD_PATCH, '/room/'.$room->getId().'/grant-role/'.$guest->getName(), [
@@ -115,7 +116,7 @@ class RoomControllerTest extends RoomWebTestCase
 
     public function testCannotUpdateHostRole(): void
     {
-        $room = $this->createRoom();
+        $room = $this->createRoomDocument();
 
         $this->client->jsonRequest(Request::METHOD_PATCH, '/room/'.$room->getId().'/grant-role/'.$room->getHost()->getName(), [
             'role' => Guest::ROLE_GUEST,
@@ -142,7 +143,7 @@ class RoomControllerTest extends RoomWebTestCase
      */
     public function testGrantAnInexistantRole(array $payload, string $violationMessage): void
     {
-        $room = $this->createRoom();
+        $room = $this->createRoomDocument();
         $guest = $this->joinRoom($room);
 
         $this->client->jsonRequest(Request::METHOD_PATCH, '/room/'.$room->getId().'/grant-role/'.$guest->getName(), $payload, [
@@ -180,7 +181,7 @@ class RoomControllerTest extends RoomWebTestCase
         string $errorMessage,
         array $payload = []
     ): void {
-        $room = $this->createRoom();
+        $room = $this->createRoomDocument();
 
         $route = str_replace('{roomId}', $room->getId(), $route);
         $this->client->jsonRequest($httpMethod, $route, $payload, [

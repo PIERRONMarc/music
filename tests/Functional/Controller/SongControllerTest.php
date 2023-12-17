@@ -24,7 +24,7 @@ class SongControllerTest extends RoomWebTestCase
      */
     public function testPerformActionOnNonExistentRoom(string $httpMethod, string $route, array $payload = []): void
     {
-        $room = $this->createRoom();
+        $room = $this->createRoomDocument();
 
         $this->client->jsonRequest($httpMethod, $route, $payload, [
             'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),
@@ -63,7 +63,7 @@ class SongControllerTest extends RoomWebTestCase
 
     public function testAddASongToARoom(): void
     {
-        $room = $this->createRoom();
+        $room = $this->createRoomDocument();
 
         $this->client->jsonRequest(Request::METHOD_POST, '/room/'.$room->getId().'/song', [
             'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
@@ -90,7 +90,7 @@ class SongControllerTest extends RoomWebTestCase
      */
     public function testAddSongValidation(array $payload, string $violationMessage): void
     {
-        $room = $this->createRoom();
+        $room = $this->createRoomDocument();
 
         // song is not from YouTube
         $this->client->jsonRequest(Request::METHOD_POST, '/room/'.$room->getId().'/song', $payload, [
@@ -125,7 +125,7 @@ class SongControllerTest extends RoomWebTestCase
 
     public function testDeleteSong(): void
     {
-        $room = $this->createRoom();
+        $room = $this->createRoomDocument();
         $song = $this->addSong($room);
 
         $this->client->jsonRequest(Request::METHOD_DELETE, '/room/'.$room->getId().'/song/'.$song->getId(), [], [
@@ -139,7 +139,7 @@ class SongControllerTest extends RoomWebTestCase
 
     public function testCurrentSongIsUpdated(): void
     {
-        $room = $this->createRoom();
+        $room = $this->createRoomDocument();
         $song = $this->addSong($room, true);
 
         $this->client->jsonRequest(Request::METHOD_PATCH, '/room/'.$room->getId().'/current-song', [
@@ -155,7 +155,7 @@ class SongControllerTest extends RoomWebTestCase
 
     public function testUpdateCurrentSongWhenNoCurrentSong(): void
     {
-        $room = $this->createRoom();
+        $room = $this->createRoomDocument();
 
         $this->client->jsonRequest(Request::METHOD_PATCH, '/room/'.$room->getId().'/current-song', [
             'isPaused' => true,
@@ -175,7 +175,7 @@ class SongControllerTest extends RoomWebTestCase
      */
     public function testUpdateCurrentSongValidation(array $payload, string $violationMessage): void
     {
-        $room = $this->createRoom();
+        $room = $this->createRoomDocument();
         $this->addSong($room, true);
 
         $this->client->jsonRequest(Request::METHOD_PATCH, '/room/'.$room->getId().'/current-song', $payload, [
@@ -202,7 +202,7 @@ class SongControllerTest extends RoomWebTestCase
 
     public function testGoToTheNextSong(): void
     {
-        $room = $this->createRoom();
+        $room = $this->createRoomDocument();
         $this->addSong($room, true);
         $nextSong = $this->addSong($room, false, [
             'url' => 'https://www.youtube.com/watch?v=pAgnJDJN4VA&ab_channel=acdcVEVO',
@@ -222,7 +222,7 @@ class SongControllerTest extends RoomWebTestCase
 
     public function testGoToNextSongWhenNoMoreSongs(): void
     {
-        $room = $this->createRoom();
+        $room = $this->createRoomDocument();
 
         $this->client->jsonRequest(Request::METHOD_GET, '/room/'.$room->getId().'/next-song', [], [
             'HTTP_AUTHORIZATION' => 'Bearer '.$room->getHost()->getToken(),

@@ -12,6 +12,7 @@ use App\Form\HandleGuestRoleType;
 use App\Mercure\Message\CreateRoomMessage;
 use App\Mercure\Message\GuestJoinMessage;
 use App\Mercure\Message\UpdateGuestMessage;
+use App\Repository\RoomRepository;
 use App\Service\Jwt\TokenFactory;
 use App\Service\Jwt\TokenValidator;
 use App\Service\RandomNameGenerator\GuestName\RandomGuestNameGenerator;
@@ -67,11 +68,13 @@ class RoomController extends AbstractController
     }
 
     #[Route('/room', name: 'get_all_room', methods: ['GET', 'OPTIONS'])]
-    public function getAllRooms(DocumentManager $dm, Request $request): Response
-    {
+    public function getAllRooms(
+        RoomRepository $roomRepository,
+        Request $request
+    ): Response {
         $page = 0 === $request->query->getInt('page', 1) ? 1 : $request->query->getInt('page', 1);
         $offset = ($page - 1) * 30;
-        $rooms = $dm->getRepository(RoomDocument::class)->findBy([], [], 30, $offset);
+        $rooms = $roomRepository->findBy([], [], 30, $offset);
 
         return $this->json($rooms, Response::HTTP_OK, [], ['groups' => 'get_all_room']);
     }

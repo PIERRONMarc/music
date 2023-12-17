@@ -27,7 +27,7 @@ class AuthorizationTest extends RoomWebTestCase
         string $errorMessage,
         array $payload = []
     ): void {
-        $room = $this->createRoom();
+        $room = $this->createRoomDocument();
         $guest = $this->joinRoom($room);
 
         $route = str_replace('{roomId}', $room->getId(), $route);
@@ -86,8 +86,8 @@ class AuthorizationTest extends RoomWebTestCase
      */
     public function testJWTBelongToTheRoom(string $httpMethod, string $route, array $payload = []): void
     {
-        $room1 = $this->createRoom();
-        $room2 = $this->createRoom();
+        $room1 = $this->createRoomDocument();
+        $room2 = $this->createRoomDocument();
 
         $route = str_replace('{roomId}', $room1->getId(), $route);
         $this->client->jsonRequest($httpMethod, $route, $payload, [

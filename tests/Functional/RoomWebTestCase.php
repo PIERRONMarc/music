@@ -2,9 +2,11 @@
 
 namespace App\Tests\Functional;
 
-use App\Document\Guest;
-use App\Document\Room;
-use App\Document\Song;
+use App\Document\Guest as GuestDocument;
+use App\Document\Room as RoomDocument;
+use App\Document\Song as SongDocument;
+use App\Entity\Guest;
+use App\Entity\Room;
 use App\Service\Jwt\TokenFactory;
 use Doctrine\ODM\MongoDB\MongoDBException;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -14,14 +16,14 @@ abstract class RoomWebTestCase extends WebTestCase
 {
     use DatabaseTrait;
 
-    protected function createRoom(): Room
+    protected function createRoomDocument(): RoomDocument
     {
         $tokenFactory = static::getContainer()->get(TokenFactory::class);
-        $host = (new Guest())
+        $host = (new GuestDocument())
             ->setName('Angry ape')
             ->setRole(Guest::ROLE_ADMIN)
         ;
-        $room = (new Room())
+        $room = (new RoomDocument())
             ->setHost($host)
             ->addGuest($host)
             ->setName('Red rocks')
@@ -40,12 +42,38 @@ abstract class RoomWebTestCase extends WebTestCase
         return $room;
     }
 
-    protected function joinRoom(Room $room): Guest
+    protected function createRoom(): Room
     {
         $tokenFactory = static::getContainer()->get(TokenFactory::class);
-        $room = $this->getDocumentManager()->getRepository(Room::class)->findOneBy(['id' => $room->getId()]);
+        $host = (new Guest())
+            ->setName('Angry ape')
+            ->setRole(GuestDocument::ROLE_ADMIN)
+        ;
+        $room = (new Room())
+            ->setHost($host)
+            ->addGuest($host)
+            ->setName('Red rocks')
+        ;
+        $this->getEntityManager()->persist($room);
+        $this->getEntityManager()->flush();
 
-        $guest = (new Guest())
+        $host->setToken($tokenFactory->createToken([
+            'claims' => [
+                'guestName' => 'Angry ape',
+                'roomId' => $room->getId(),
+            ],
+        ])->toString());
+        $room->setHost($host);
+
+        return $room;
+    }
+
+    protected function joinRoom(RoomDocument $room): GuestDocument
+    {
+        $tokenFactory = static::getContainer()->get(TokenFactory::class);
+        $room = $this->getDocumentManager()->getRepository(RoomDocument::class)->findOneBy(['id' => $room->getId()]);
+
+        $guest = (new GuestDocument())
             ->setName('Grumpy cat')
             ->setToken($tokenFactory->createToken([
                 'claims' => [
@@ -53,7 +81,7 @@ abstract class RoomWebTestCase extends WebTestCase
                     'roomId' => $room->getId(),
                 ],
             ])->toString())
-            ->setRole(Guest::ROLE_GUEST)
+            ->setRole(GuestDocument::ROLE_GUEST)
         ;
         $room->addGuest($guest);
 
@@ -68,7 +96,7 @@ abstract class RoomWebTestCase extends WebTestCase
      *
      * @throws MongoDBException
      */
-    protected function addSong(Room $room, bool $isCurrentSong = false, array $options = []): Song
+    protected function addSong(RoomDocument $room, bool $isCurrentSong = false, array $options = []): SongDocument
     {
         $resolver = new OptionsResolver();
         $resolver->setDefaults([
@@ -76,8 +104,8 @@ abstract class RoomWebTestCase extends WebTestCase
         ]);
         $options = $resolver->resolve($options);
 
-        $song = (new Song())->setUrl($options['url']);
-        $room = $this->getDocumentManager()->getRepository(Room::class)->findOneBy(['id' => $room->getId()]);
+        $song = (new SongDocument())->setUrl($options['url']);
+        $room = $this->getDocumentManager()->getRepository(RoomDocument::class)->findOneBy(['id' => $room->getId()]);
 
         if ($isCurrentSong) {
             $room->setCurrentSong($song);
@@ -92,21 +120,26 @@ abstract class RoomWebTestCase extends WebTestCase
     }
 
     /**
-     * @return mixed[]
-     *
-     * @throws MongoDBException
+     * @return Room[]
      */
     protected function storeRooms(int $numberOfRooms): array
     {
         $rooms = [];
 
-        $dm = $this->getDocumentManager();
+        $entityManager = $this->getEntityManager();
         for ($i = 0; $i < $numberOfRooms; ++$i) {
-            $room = (new Room())->setName((string) $i);
-            $dm->persist($room);
+            $host = (new Guest())
+                ->setName('John')
+                ->setRole(Guest::ROLE_ADMIN)
+            ;
+            $room = (new Room())
+                ->setName((string) $i)
+                ->setHost($host)
+            ;
+            $entityManager->persist($room);
             $rooms[] = $room;
         }
-        $dm->flush();
+        $entityManager->flush();
 
         return $rooms;
     }
