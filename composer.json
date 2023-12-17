@@ -89,6 +89,7 @@
         }
     },
     "require-dev": {
+        "dama/doctrine-test-bundle": "^7.3",
         "friendsofphp/php-cs-fixer": "^3.8",
         "phpro/grumphp": "^1.10",
         "phpstan/phpstan": "^1.5",
