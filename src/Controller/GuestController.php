@@ -2,12 +2,12 @@
 
 namespace App\Controller;
 
-use App\Document\Room;
 use App\Mercure\Message\DeleteRoomMessage;
 use App\Mercure\Message\GuestLeaveMessage;
 use App\Mercure\Message\UpdateGuestMessage;
+use App\Repository\RoomRepository;
 use App\Service\Jwt\TokenValidator;
-use Doctrine\ODM\MongoDB\DocumentManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,9 +21,10 @@ class GuestController extends AbstractController
     #[Route('/room/leave', name: 'leave_room', methods: ['POST'])]
     public function leaveRoom(
         Request $request,
-        DocumentManager $documentManager,
         TokenValidator $tokenValidator,
         HubInterface $hub,
+        RoomRepository $roomRepository,
+        EntityManagerInterface $entityManager,
     ): Response {
         $token = $request->toArray()['token'] ?? null;
         if (!$token) {
@@ -36,7 +37,7 @@ class GuestController extends AbstractController
             throw new AccessDeniedHttpException('There is no room id in the token');
         }
 
-        $room = $documentManager->getRepository(Room::class)->findOneBy(['id' => $roomId]);
+        $room = $roomRepository->findOneById($roomId);
         if (!$room) {
             throw new NotFoundHttpException('The room does not exist');
         }
@@ -51,11 +52,13 @@ class GuestController extends AbstractController
             throw new NotFoundHttpException('There is no guest with this name');
         }
 
-        $room->removeGuest($guestName);
+        $room->removeGuestByName($guestName);
 
         if (!$room->hasGuests()) {
-            $documentManager->remove($room);
-            $documentManager->flush();
+            $room->getHost()->setRoom(null);
+            $entityManager->flush();
+            $entityManager->remove($room);
+            $entityManager->flush();
 
             $message = new DeleteRoomMessage($room->getName());
             $hub->publish($message->buildUpdate());
@@ -71,8 +74,7 @@ class GuestController extends AbstractController
             $hub->publish($message->buildUpdate());
         }
 
-        $room->removeGuest($guestName);
-        $documentManager->flush();
+        $entityManager->flush();
 
         $message = new GuestLeaveMessage($roomId, $guestName);
         $hub->publish($message->buildUpdate());

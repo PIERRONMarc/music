@@ -86,4 +86,16 @@ class Guest
 
         return $this;
     }
+
+    public function isAdmin(): bool
+    {
+        return self::ROLE_ADMIN === $this->role;
+    }
+
+    public function setAdmin(): static
+    {
+        $this->role = self::ROLE_ADMIN;
+
+        return $this;
+    }
 }

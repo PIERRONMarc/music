@@ -162,6 +162,7 @@ class Room
         if ($this->hasGuests()) {
             $guest = $this->guests->first();
             $guest->setAdmin();
+            $this->host = $guest;
         }
     }
 

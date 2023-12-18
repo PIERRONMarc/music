@@ -124,6 +124,17 @@ class Room
         return $this->guests;
     }
 
+    public function getGuest(string $guestName): ?Guest
+    {
+        foreach ($this->guests as $guest) {
+            if ($guest->getName() === $guestName) {
+                return $guest;
+            }
+        }
+
+        return null;
+    }
+
     public function addGuest(Guest $guest): static
     {
         if (!$this->guests->contains($guest)) {
@@ -144,5 +155,43 @@ class Room
         }
 
         return $this;
+    }
+
+    public function removeGuestByName(string $guestName): self
+    {
+        foreach ($this->guests as $guest) {
+            if ($guest->getName() === $guestName) {
+                $this->guests->removeElement($guest);
+
+                return $this;
+            }
+        }
+
+        return $this;
+    }
+
+    public function hasGuests(): bool
+    {
+        return $this->guests->count() > 0;
+    }
+
+    public function selectAnotherAdmin(): void
+    {
+        if ($this->hasGuests()) {
+            $guest = $this->guests->first();
+            $guest->setAdmin();
+            $this->host = $guest;
+        }
+    }
+
+    public function getAdmin(): Guest
+    {
+        foreach ($this->guests as $guest) {
+            if ($guest->isAdmin()) {
+                return $guest;
+            }
+        }
+
+        throw new \LogicException('There is no admin in this room');
     }
 }
