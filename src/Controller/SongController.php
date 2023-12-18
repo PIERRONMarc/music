@@ -17,7 +17,6 @@ use App\Service\Jwt\TokenValidator;
 use App\Service\Room\RoomAuthorization;
 use App\Service\SongProvider\Exception\SongNotFoundException;
 use App\Service\SongProvider\SongProviderInterface;
-use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -236,7 +235,6 @@ class SongController extends AbstractController
     #[Route('/room/{roomId}/next-song', name: 'go_to_next_song', methods: 'GET')]
     public function goToNextSong(
         string $roomId,
-        DocumentManager $documentManager,
         EntityManagerInterface $entityManager,
         RoomRepository $roomRepository,
         TokenValidator $tokenValidator,

@@ -30,7 +30,6 @@ RUN set -eux; \
 		intl \
 		opcache \
 		zip \
-        mongodb \
 		pdo_pgsql \
 	;
 

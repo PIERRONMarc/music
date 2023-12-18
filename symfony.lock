@@ -101,22 +101,6 @@
     "doctrine/lexer": {
         "version": "1.2.3"
     },
-    "doctrine/mongodb-odm": {
-        "version": "2.3.2"
-    },
-    "doctrine/mongodb-odm-bundle": {
-        "version": "4.4",
-        "recipe": {
-            "repo": "github.com/symfony/recipes-contrib",
-            "branch": "master",
-            "version": "4.1",
-            "ref": "68562ca89de9f97a952535cd3eee49f5541b76a7"
-        },
-        "files": [
-            "config/packages/doctrine_mongodb.yaml",
-            "src/Document/.gitignore"
-        ]
-    },
     "doctrine/persistence": {
         "version": "2.5.1"
     },
@@ -134,9 +118,6 @@
         "files": [
             ".php-cs-fixer.dist.php"
         ]
-    },
-    "friendsofphp/proxy-manager-lts": {
-        "version": "v1.0.7"
     },
     "gitonomy/gitlib": {
         "version": "v1.3.4"
@@ -168,12 +149,6 @@
     "guzzlehttp/psr7": {
         "version": "2.5.0"
     },
-    "jean85/pretty-package-versions": {
-        "version": "2.0.5"
-    },
-    "laminas/laminas-code": {
-        "version": "4.5.1"
-    },
     "laravel/serializable-closure": {
         "version": "v1.1.1"
     },
@@ -182,9 +157,6 @@
     },
     "lcobucci/jwt": {
         "version": "4.1.5"
-    },
-    "mongodb/mongodb": {
-        "version": "1.12.0"
     },
     "monolog/monolog": {
         "version": "2.5.0"

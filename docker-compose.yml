@@ -12,8 +12,6 @@ services:
             MERCURE_URL: ${CADDY_MERCURE_URL:-http://php/.well-known/mercure}
             MERCURE_PUBLIC_URL: https://${SERVER_NAME:-localhost}/.well-known/mercure
             MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
-            MONGODB_URL: mongodb://${MONGODB_USER:-root}:${MONGODB_PASSWORD:-root}@mongo:27017
-            MONGODB_DB: ${MONGODB_DB:-appDB}
             JWT_SECRET_KEY: ${JWT_SECRET_KEY:-/app/config/jwt/private.pem}
         volumes:
             - caddy_data:/data
@@ -32,13 +30,6 @@ services:
               published: ${HTTP3_PORT:-443}
               protocol: udp
               
-    mongo:
-        image: mongo
-        restart: always
-        environment:
-            MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER:-root}
-            MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-root}
-
     database:
       image: postgres:${POSTGRES_VERSION:-15}-alpine
       environment:

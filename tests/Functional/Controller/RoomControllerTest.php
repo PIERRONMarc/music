@@ -2,7 +2,6 @@
 
 namespace App\Tests\Functional\Controller;
 
-use App\Document\Guest as GuestDocument;
 use App\Entity\Guest;
 use App\Entity\Room;
 use App\Tests\Functional\RoomWebTestCase;
@@ -103,7 +102,7 @@ class RoomControllerTest extends RoomWebTestCase
         $this->client->jsonRequest(
             Request::METHOD_PATCH,
             sprintf('/room/%s/grant-role/%s', $room->getId()->toRfc4122(), $guest->getName()),
-            ['role' => GuestDocument::ROLE_ADMIN],
+            ['role' => Guest::ROLE_ADMIN],
             ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $room->getHost()->getToken())],
         );
         $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
@@ -205,7 +204,7 @@ class RoomControllerTest extends RoomWebTestCase
             'route' => '/room/947f3306-4155-476d-bccf-184eba63bc0c/grant-role/Angry%20ape',
             'errorMessage' => 'The room does not exist',
             'payload' => [
-                'role' => GuestDocument::ROLE_ADMIN,
+                'role' => Guest::ROLE_ADMIN,
             ],
         ];
         yield [
@@ -213,7 +212,7 @@ class RoomControllerTest extends RoomWebTestCase
             'route' => '/room/{roomId}/grant-role/947f3306-4155-476d-bccf-184eba63bc0c',
             'errorMessage' => 'Guest is not found',
             'payload' => [
-                'role' => GuestDocument::ROLE_ADMIN,
+                'role' => Guest::ROLE_ADMIN,
             ],
         ];
     }
@@ -223,7 +222,6 @@ class RoomControllerTest extends RoomWebTestCase
      */
     protected function tearDown(): void
     {
-        $this->clearDatabase();
         $this->client = null;
         parent::tearDown();
     }

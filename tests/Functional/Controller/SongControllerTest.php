@@ -276,7 +276,6 @@ class SongControllerTest extends RoomWebTestCase
      */
     protected function tearDown(): void
     {
-        $this->clearDatabase();
         $this->client = null;
         parent::tearDown();
     }
