@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Tests\Unit\Sercice\RandomNameGenerator\RoomName;
+namespace App\Tests\Unit\Service\RandomNameGenerator\RoomName;
 
-use App\Repository\RoomDocumentRepository;
+use App\Repository\RoomRepository;
 use App\Service\Randomizer\RandomizerInterface;
 use App\Service\RandomNameGenerator\RoomName\RandomRoomNameGenerator;
-use Doctrine\ODM\MongoDB\DocumentManager;
 use PHPUnit\Framework\TestCase;
 
 class RandomRoomGeneratorTest extends TestCase
@@ -15,13 +14,10 @@ class RandomRoomGeneratorTest extends TestCase
         $randomizer = $this->createMock(RandomizerInterface::class);
         $randomizer->method('mtRand')->willReturn(0);
 
-        $roomRepository = $this->createMock(RoomDocumentRepository::class);
+        $roomRepository = $this->createMock(RoomRepository::class);
         $roomRepository->method('countRoomWithNameLike')->willReturn(0);
 
-        $documentManager = $this->createMock(DocumentManager::class);
-        $documentManager->method('getRepository')->willReturn($roomRepository);
-
-        $generator = new RandomRoomNameGenerator($randomizer, $documentManager);
+        $generator = new RandomRoomNameGenerator($randomizer, $roomRepository);
 
         $this->assertSame('Red Rocks', $generator->getName());
     }
@@ -31,13 +27,10 @@ class RandomRoomGeneratorTest extends TestCase
         $randomizer = $this->createMock(RandomizerInterface::class);
         $randomizer->method('mtRand')->willReturn(0);
 
-        $roomRepository = $this->createMock(RoomDocumentRepository::class);
+        $roomRepository = $this->createMock(RoomRepository::class);
         $roomRepository->method('countRoomWithNameLike')->willReturn(1);
 
-        $documentManager = $this->createMock(DocumentManager::class);
-        $documentManager->method('getRepository')->willReturn($roomRepository);
-
-        $generator = new RandomRoomNameGenerator($randomizer, $documentManager);
+        $generator = new RandomRoomNameGenerator($randomizer, $roomRepository);
 
         $this->assertSame('Red Rocks 2', $generator->getName());
     }

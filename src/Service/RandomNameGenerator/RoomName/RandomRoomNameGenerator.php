@@ -2,36 +2,29 @@
 
 namespace App\Service\RandomNameGenerator\RoomName;
 
-use App\Document\Room;
-use App\Repository\RoomDocumentRepository;
+use App\Repository\RoomRepository;
 use App\Service\Randomizer\RandomizerInterface;
-use Doctrine\ODM\MongoDB\DocumentManager;
-use Doctrine\ODM\MongoDB\MongoDBException;
 
 class RandomRoomNameGenerator
 {
     private RandomizerInterface $randomizer;
 
-    private RoomDocumentRepository $roomRepository;
+    private RoomRepository $roomRepository;
 
     /**
      * @var string[]
      */
     private array $venues;
 
-    public function __construct(RandomizerInterface $randomizer, DocumentManager $documentManager)
+    public function __construct(RandomizerInterface $randomizer, RoomRepository $roomRepository)
     {
         $this->randomizer = $randomizer;
-        /** @var RoomDocumentRepository $roomRepository */
-        $roomRepository = $documentManager->getRepository(Room::class);
         $this->roomRepository = $roomRepository;
         $this->venues = file(__DIR__.'/venues.txt', \FILE_IGNORE_NEW_LINES);
     }
 
     /**
      * Get a randomly generated name.
-     *
-     * @throws MongoDBException
      */
     public function getName(): string
     {

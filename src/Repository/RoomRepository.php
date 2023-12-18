@@ -25,4 +25,37 @@ class RoomRepository extends ServiceEntityRepository
     {
         return $this->findOneBy(['id' => $id]);
     }
+
+    /**
+     * Count the number of rooms that (partially or not) match the given room name.
+     */
+    public function countRoomWithNameLike(string $name): int
+    {
+        return $this->createQueryBuilder('room')
+            ->select('count(room.id)')
+            ->where('room.name like :name')
+            ->setParameter('name', $name.'%')
+            ->getQuery()
+            ->getSingleScalarResult()
+        ;
+    }
+
+    /**
+     * Count the number of guests that (partially or not) match the given guest name for a given room.
+     */
+    public function countGuestWithNameLike(string $name, string $roomId): int
+    {
+        return $this->createQueryBuilder('room')
+            ->select('count(guest.id)')
+            ->join('room.guests', 'guest')
+            ->where('room.id = :roomId')
+            ->andWhere('guest.name like :name')
+            ->setParameters([
+                'roomId' => $roomId,
+                'name' => $name.'%',
+            ])
+            ->getQuery()
+            ->getSingleScalarResult()
+        ;
+    }
 }

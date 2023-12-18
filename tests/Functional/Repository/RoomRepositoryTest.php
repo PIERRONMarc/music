@@ -2,10 +2,9 @@
 
 namespace App\Tests\Functional\Repository;
 
-use App\Document\Guest;
-use App\Document\Room;
-use App\Document\Song;
-use App\Repository\RoomDocumentRepository;
+use App\Entity\Guest;
+use App\Entity\Room;
+use App\Repository\RoomRepository;
 use App\Tests\Functional\DatabaseTrait;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
@@ -19,63 +18,38 @@ class RoomRepositoryTest extends KernelTestCase
     protected function setUp(): void
     {
         self::bootKernel();
-        $this->clearDatabase();
     }
 
     public function testThatCorrectNumberOfRoomMatchingAStringIsReturned(): void
     {
-        $dm = $this->getDocumentManager();
-        $dm->persist((new Room())->setName('Red Rocks'));
-        $dm->persist((new Room())->setName('Red Rocks 2'));
-        $dm->persist((new Room())->setName('Madison Square Garden'));
-        $dm->persist((new Room())->setName('Rd Rcks'));
-        $dm->flush();
+        $entityManager = $this->getEntityManager();
+        $entityManager->persist((new Room())->setName('Red Rocks')->setHost((new Guest())->setName('John')));
+        $entityManager->persist((new Room())->setName('Red Rocks 2')->setHost((new Guest())->setName('John')));
+        $entityManager->persist((new Room())->setName('Madison Square Garden')->setHost((new Guest())->setName('John')));
+        $entityManager->persist((new Room())->setName('Rd Rcks')->setHost((new Guest())->setName('John')));
+        $entityManager->flush();
 
-        /** @var RoomDocumentRepository */
-        $repository = $dm->getRepository(Room::class);
+        /** @var RoomRepository $repository */
+        $repository = $entityManager->getRepository(Room::class);
         $this->assertSame(2, $repository->countRoomWithNameLike('Red Rocks'));
     }
 
     public function testThatCorrectNumberOfGuestMatchingAStringIsReturned(): void
     {
-        $dm = $this->getDocumentManager();
+        $entityManager = $this->getEntityManager();
         $room = (new Room())
             ->setName('Red Rocks')
+            ->setHost((new Guest())->setName('Adorable Advaark'))
             ->addGuest((new Guest())->setName('Adorable Advaark'))
             ->addGuest((new Guest())->setName('Adorable Advaark 2'))
             ->addGuest((new Guest())->setName('Adorable Ape'))
         ;
-        $dm->persist($room);
-        $dm->flush();
+        $entityManager->persist($room);
+        $entityManager->flush();
 
-        /** @var RoomDocumentRepository */
-        $repository = $dm->getRepository(Room::class);
-        $this->assertSame(2, $repository->countGuestWithNameLike('Adorable Advaark', $room->getId()));
-        $this->assertSame(0, $repository->countGuestWithNameLike('Adorable Advaark', 'room that does not exist'));
-    }
-
-    public function testDeleteSong(): void
-    {
-        $song = (new Song())->setUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
-        $room = (new Room())
-            ->setName('Red Rocks')
-            ->addSong($song)
-        ;
-        $dm = $this->getDocumentManager();
-        $room2 = (new Room())
-            ->setName('Red Rocks')
-            ->addSong($song)
-        ;
-        $dm->persist($room2);
-        $dm->persist($room);
-        $dm->flush();
-
-        /** @var RoomDocumentRepository */
-        $repository = $dm->getRepository(Room::class);
-        $updatedRoom = $repository->deleteSong($room->getId(), $song->getId());
-
-        $this->assertEmpty($updatedRoom->getSongs()->toArray());
-        $this->assertNull($repository->deleteSong('123', '123')); // assert with wrong ObjectId format for $songId parameter
-        $this->assertNull($repository->deleteSong('123', '6290ad1746e25627850c0982'));
+        /** @var RoomRepository $repository */
+        $repository = $entityManager->getRepository(Room::class);
+        $this->assertSame(2, $repository->countGuestWithNameLike('Adorable Advaark', $room->getId()->toRfc4122()));
+        $this->assertSame(0, $repository->countGuestWithNameLike('Adorable Advaark', '76413dfe-b0d0-4828-8ff7-768003ea1d58'));
     }
 }

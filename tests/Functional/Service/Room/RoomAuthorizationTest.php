@@ -2,8 +2,8 @@
 
 namespace App\Tests\Functional\Service\Room;
 
-use App\Document\Guest;
-use App\Document\Room;
+use App\Entity\Guest;
+use App\Entity\Room;
 use App\Service\Room\RoomAuthorization;
 use App\Tests\Functional\DatabaseTrait;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -20,23 +20,15 @@ class RoomAuthorizationTest extends KernelTestCase
             ->addGuest($guest)
             ->addGuest($host)
             ->setHost($host)
+            ->setName('Red Rocks')
         ;
-        $this->getDocumentManager()->persist($room);
-        $this->getDocumentManager()->flush();
+        $this->getEntityManager()->persist($room);
+        $this->getEntityManager()->flush();
 
         $roomAuthorization = new RoomAuthorization();
 
         $this->assertTrue($roomAuthorization->guestIsGranted(Guest::ROLE_GUEST, $guest->getName(), $room->getGuests()->toArray()));
         $this->assertFalse($roomAuthorization->guestIsGranted(Guest::ROLE_ADMIN, $guest->getName(), $room->getGuests()->toArray()));
         $this->assertFalse($roomAuthorization->guestIsGranted(Guest::ROLE_ADMIN, 'name of inexistant guest', $room->getGuests()->toArray()));
-    }
-
-    /**
-     * @throws \Exception
-     */
-    protected function tearDown(): void
-    {
-        $this->clearDatabase();
-        parent::tearDown();
     }
 }
