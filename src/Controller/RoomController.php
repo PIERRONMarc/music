@@ -69,7 +69,7 @@ class RoomController extends AbstractController
         RoomRepository $roomRepository,
         Request $request
     ): Response {
-        $page = 0 === $request->query->getInt('page', 1) ? 1 : $request->query->getInt('page', 1);
+        $page = 0 === (int) $request->query->get('page') ? 1 : (int) $request->query->get('page');
         $offset = ($page - 1) * 30;
         $rooms = $roomRepository->findBy([], [], 30, $offset);
 

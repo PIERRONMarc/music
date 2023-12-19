@@ -35,4 +35,12 @@ class FormExceptionNormalizer implements NormalizerInterface
     {
         return $data instanceof FormHttpException;
     }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getSupportedTypes(?string $format): array
+    {
+        return [FormHttpException::class];
+    }
 }

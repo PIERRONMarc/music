@@ -19,20 +19,20 @@
         "phpdocumentor/reflection-docblock": "^5.3",
         "phpstan/phpdoc-parser": "^1.5",
         "ramsey/uuid": "^4.3",
-        "symfony/console": "6.2.*",
-        "symfony/dotenv": "6.2.*",
+        "symfony/console": "6.3.*",
+        "symfony/dotenv": "6.3.*",
         "symfony/flex": "^2",
-        "symfony/form": "6.2.*",
-        "symfony/framework-bundle": "6.2.*",
+        "symfony/form": "6.3.*",
+        "symfony/framework-bundle": "6.3.*",
         "symfony/mercure-bundle": "^0.3.5",
-        "symfony/options-resolver": "6.2.*",
-        "symfony/property-access": "6.2.*",
-        "symfony/property-info": "6.2.*",
-        "symfony/runtime": "6.2.*",
-        "symfony/serializer": "6.2.*",
-        "symfony/uid": "6.2.*",
-        "symfony/validator": "6.2.*",
-        "symfony/yaml": "6.2.*"
+        "symfony/options-resolver": "6.3.*",
+        "symfony/property-access": "6.3.*",
+        "symfony/property-info": "6.3.*",
+        "symfony/runtime": "6.3.*",
+        "symfony/serializer": "6.3.*",
+        "symfony/uid": "6.3.*",
+        "symfony/validator": "6.3.*",
+        "symfony/yaml": "6.3.*"
     },
     "config": {
         "allow-plugins": {
@@ -83,12 +83,12 @@
     "extra": {
         "symfony": {
             "allow-contrib": false,
-            "require": "6.2.*",
+            "require": "6.3.*",
             "docker": true
         }
     },
     "require-dev": {
-        "dama/doctrine-test-bundle": "^7.3",
+        "dama/doctrine-test-bundle": "8.0",
         "friendsofphp/php-cs-fixer": "^3.8",
         "phpro/grumphp": "^1.10",
         "phpstan/phpstan": "^1.5",
@@ -97,9 +97,9 @@
         "phpstan/phpstan-symfony": "^1.1",
         "phpunit/phpunit": "^9.5",
         "sebastian/phpcpd": "^6.0",
-        "symfony/browser-kit": "6.2.*",
-        "symfony/css-selector": "6.2.*",
+        "symfony/browser-kit": "6.3.*",
+        "symfony/css-selector": "6.3.*",
         "symfony/maker-bundle": "^1.50",
-        "symfony/phpunit-bridge": "^6.2"
+        "symfony/phpunit-bridge": "^6.3"
     }
 }
