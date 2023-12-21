@@ -29,7 +29,7 @@ class Room
     #[ORM\JoinColumn(nullable: false)]
     private Guest $host;
 
-    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(cascade: ['persist', 'remove'], fetch: 'EAGER')]
     private ?Song $currentSong = null;
 
     #[ORM\OneToMany(mappedBy: 'room', targetEntity: Song::class, cascade: ['persist'])]
