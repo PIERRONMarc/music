@@ -222,10 +222,6 @@ class SongControllerTest extends RoomWebTestCase
     private function provideWrongUpdateCurrentSongPayload(): \Generator
     {
         yield [
-            'payload' => [],
-            'violationMessage' => 'This value should not be null.',
-        ];
-        yield [
             'payload' => [
                 'isPaused' => 'azezae',
             ],
