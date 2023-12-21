@@ -25,7 +25,7 @@ class Room
     #[Groups(groups: ['get_all_room'])]
     private string $name;
 
-    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(cascade: ['persist', 'remove'], fetch: 'EAGER')]
     #[ORM\JoinColumn(nullable: false)]
     private Guest $host;
 
