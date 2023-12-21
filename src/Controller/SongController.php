@@ -88,20 +88,20 @@ class SongController extends AbstractController
             throw new \RuntimeException('Searching the song failed');
         }
 
-        $song = (new Song())
-            ->setUrl($songDTO->id ?? $songDTOList[0]->id)
-            ->setTitle($songDTO->title ?? $songDTOList[0]->title)
-            ->setAuthor($songDTO->author ?? $songDTOList[0]->author)
-            ->setLengthInSeconds($songDTO->lengthInSeconds ?? $songDTOList[0]->lengthInSeconds);
-        if (null === $room->getCurrentSong()) {
-            $room->setCurrentSong($song);
-        } else {
-            $room->addSong($song);
-        }
-
-        $entityManager->flush();
-
         if ($songDTO) {
+            $song = (new Song())
+                ->setUrl($songDTO->id)
+                ->setTitle($songDTO->title)
+                ->setAuthor($songDTO->author)
+                ->setLengthInSeconds($songDTO->lengthInSeconds);
+            if (null === $room->getCurrentSong()) {
+                $room->setCurrentSong($song);
+            } else {
+                $room->addSong($song);
+            }
+
+            $entityManager->flush();
+
             $message = new AddSongMessage(
                 $room->getId(),
                 $song->getId(),
@@ -112,18 +112,36 @@ class SongController extends AbstractController
             );
             $hub->publish($message->buildUpdate());
         } else {
+            $songs = [];
             foreach ($songDTOList as $songDTO) {
+                $song = (new Song())
+                    ->setUrl($songDTO->id)
+                    ->setTitle($songDTO->title)
+                    ->setAuthor($songDTO->author)
+                    ->setLengthInSeconds($songDTO->lengthInSeconds);
+                $songs[] = $song;
+                if (null === $room->getCurrentSong()) {
+                    $room->setCurrentSong($song);
+                } else {
+                    $room->addSong($song);
+                }
+            }
+
+            $entityManager->flush();
+
+            foreach ($songs as $song) {
                 $message = new AddSongMessage(
                     $room->getId(),
-                    $songDTO->id,
-                    $songDTO->id,
-                    $songDTO->title,
-                    $songDTO->author,
-                    $songDTO->lengthInSeconds,
+                    $song->getId(),
+                    $song->getUrl(),
+                    $song->getTitle(),
+                    $song->getAuthor(),
+                    $song->getLengthInSeconds(),
                 );
                 $hub->publish($message->buildUpdate());
             }
         }
+        $entityManager->flush();
 
         return $this->json($song, Response::HTTP_CREATED);
     }
