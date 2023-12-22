@@ -28,7 +28,6 @@ class GuestControllerTest extends RoomWebTestCase
             '/room/leave',
             [
                 'token' => $guest->getToken(),
-                'roomId' => $room->getId(),
             ],
         );
 
@@ -40,6 +39,8 @@ class GuestControllerTest extends RoomWebTestCase
     public function testWhenEverybodyLeaveRoomThenItDeletesRoom(): void
     {
         $room = $this->createRoom();
+        $this->addSong($room, true);
+        $this->addSong($room);
         $roomId = $room->getId()->toRfc4122();
 
         $this->client->jsonRequest(
@@ -47,7 +48,6 @@ class GuestControllerTest extends RoomWebTestCase
             '/room/leave',
             [
                 'token' => $room->getHost()->getToken(),
-                'roomId' => $room->getId()->toRfc4122(),
             ],
         );
 

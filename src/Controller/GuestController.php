@@ -55,7 +55,8 @@ class GuestController extends AbstractController
         $room->removeGuestByName($guestName);
 
         if (!$room->hasGuests()) {
-            $room->getHost()->setRoom(null);
+            $entityManager->remove($room->getCurrentSong());
+            $room->setCurrentSong(null);
             $entityManager->flush();
             $entityManager->remove($room);
             $entityManager->flush();
