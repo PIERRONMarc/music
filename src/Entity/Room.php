@@ -28,10 +28,10 @@ class Room
     #[ORM\OneToOne(cascade: ['persist', 'remove'], fetch: 'EAGER')]
     private ?Song $currentSong = null;
 
-    #[ORM\OneToMany(mappedBy: 'room', targetEntity: Song::class, cascade: ['persist'])]
+    #[ORM\OneToMany(mappedBy: 'room', targetEntity: Song::class, cascade: ['persist', 'remove'])]
     private Collection $songs;
 
-    #[ORM\OneToMany(mappedBy: 'room', targetEntity: Guest::class, cascade: ['persist'])]
+    #[ORM\OneToMany(mappedBy: 'room', targetEntity: Guest::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $guests;
 
     public function __construct()
