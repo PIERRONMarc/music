@@ -26,10 +26,6 @@ class Room
     private string $name;
 
     #[ORM\OneToOne(cascade: ['persist', 'remove'], fetch: 'EAGER')]
-    #[ORM\JoinColumn(nullable: false)]
-    private Guest $host;
-
-    #[ORM\OneToOne(cascade: ['persist', 'remove'], fetch: 'EAGER')]
     private ?Song $currentSong = null;
 
     #[ORM\OneToMany(mappedBy: 'room', targetEntity: Song::class, cascade: ['persist'])]
@@ -63,12 +59,13 @@ class Room
 
     public function getHost(): Guest
     {
-        return $this->host;
+        return $this->getAdmin();
     }
 
     public function setHost(Guest $host): static
     {
-        $this->host = $host;
+        $this->removeGuest($host);
+        $this->addGuest($host);
 
         return $this;
     }

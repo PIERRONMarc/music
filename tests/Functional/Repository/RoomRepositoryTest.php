@@ -49,7 +49,7 @@ class RoomRepositoryTest extends KernelTestCase
 
         /** @var RoomRepository $repository */
         $repository = $entityManager->getRepository(Room::class);
-        $this->assertSame(2, $repository->countGuestWithNameLike('Adorable Advaark', $room->getId()->toRfc4122()));
+        $this->assertSame(3, $repository->countGuestWithNameLike('Adorable Advaark', $room->getId()->toRfc4122()));
         $this->assertSame(0, $repository->countGuestWithNameLike('Adorable Advaark', '76413dfe-b0d0-4828-8ff7-768003ea1d58'));
     }
 }

@@ -30,7 +30,7 @@ class RoomControllerTest extends RoomWebTestCase
         $this->assertIsString($data['host']['token']);
         $this->assertSame('ADMIN', $data['host']['role']);
         $this->assertIsArray($data['songs']);
-        $this->assertIsArray($data['guests'][0]);
+        $this->assertIsArray(array_shift($data['guests']));
 
         $this->assertResponseIsSuccessful();
     }
@@ -82,7 +82,7 @@ class RoomControllerTest extends RoomWebTestCase
         $this->assertSame($currentSong->getUrl(), $data['room']['currentSong']['url']);
         $this->assertSame($currentSong->getId()->toRfc4122(), $data['room']['currentSong']['id']);
         $this->assertFalse($data['room']['currentSong']['isPaused']);
-        $this->assertSame($data['guest']['name'], $data['room']['guests'][1]['name'], 'Actual guest is not added to the guest list of the room');
+        $this->assertSame($data['guest']['name'], end($data['room']['guests'])['name'], 'Actual guest is not added to the guest list of the room');
     }
 
     public function testJoinARoomThatDoesntExist(): void
