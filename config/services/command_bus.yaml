@@ -1,0 +1,5 @@
+services:
+    App\Application\Command\:
+        resource: '../../src/Application/Command/**/*Handler.php'
+        tags:
+            - { name: tactician.handler, typehints: true }

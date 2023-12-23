@@ -9,4 +9,4 @@ imports:
     # Import order is important.
     # Global autowiring should be overriden by individual configs, not the opposite.
     - { resource: services/global.yaml }
-    - { resource: services/, exclude: global.yaml }
+    - { resource: services/command_bus.yaml }
