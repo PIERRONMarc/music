@@ -143,7 +143,7 @@ class SongController extends AbstractController
         }
         $entityManager->flush();
 
-        return $this->json($song, Response::HTTP_CREATED);
+        return $this->json($song ?? null, Response::HTTP_CREATED);
     }
 
     #[Route('room/{roomId}/song/{songId}', name: 'delete_song', methods: ['DELETE'])]
