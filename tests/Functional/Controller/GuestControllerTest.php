@@ -36,11 +36,29 @@ class GuestControllerTest extends RoomWebTestCase
         self::assertResponseIsSuccessful();
     }
 
-    public function testWhenEverybodyLeaveRoomThenItDeletesRoom(): void
+    public function testWhenEverybodyLeaveRoomWithSongsThenItDeletesRoom(): void
     {
         $room = $this->createRoom();
         $this->addSong($room, true);
         $this->addSong($room);
+        $roomId = $room->getId()->toRfc4122();
+
+        $this->client->jsonRequest(
+            Request::METHOD_POST,
+            '/room/leave',
+            [
+                'token' => $room->getHost()->getToken(),
+            ],
+        );
+
+        $updatedRoom = $this->getEntityManager()->getRepository(Room::class)->findOneById($roomId);
+        self::assertResponseIsSuccessful();
+        self::assertNull($updatedRoom);
+    }
+
+    public function testWhenEverybodyLeaveRoomThenItDeletesRoom(): void
+    {
+        $room = $this->createRoom();
         $roomId = $room->getId()->toRfc4122();
 
         $this->client->jsonRequest(
